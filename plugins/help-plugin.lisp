@@ -1,10 +1,6 @@
 ;; A Plugin that prints a short help about the bot and other plugins
 
-(defpackage :lispbot.help
-  (:use :cl :lispbot)
-  (:export :help-plugin))
-
-(in-package :lispbot.help)
+(in-package :lispbot.plugins)
 
 (defclass help-plugin (plugin)
   ((name :initform "hilfe")))

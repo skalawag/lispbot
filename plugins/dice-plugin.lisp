@@ -26,11 +26,7 @@
 ;;     ( expression )
 ;;     -primary
 
-(defpackage :lispbot.dice
-  (:use :cl :lispbot)
-  (:export :dice-plugin))
-
-(in-package :lispbot.dice)
+(in-package :lispbot.plugins)
 
 (defun dice-emptyp (string)
   (string-equal string ""))

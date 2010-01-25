@@ -1,8 +1,4 @@
-(defpackage :lispbot.greet
-  (:use :cl :lispbot)
-  (:export :greet-plugin))
-
-(in-package :lispbot.greet)
+(in-package :lispbot.plugins)
 
 (defclass greet-plugin (plugin)
   ((name :initform "greet")))
