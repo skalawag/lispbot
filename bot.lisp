@@ -12,39 +12,6 @@
 
 (declaim (optimize (debug 3) (speed 0)))
 
-(defpackage :lispbot
-  (:use :cl)
-  (:nicknames :bot)
-  (:export :bot
-	   :make-bot
-	   :add-plugin
-	   :plugins
-	   :channels
-	   :nick
-
-	   :connect
-	   :disconnect
-	   :read-loop
-	   :reply
-	   :action
-
-	   :plugin
-	   :name
-	   :message
-	   :defcommand
-	   :help
-	   :connected
-
-	   :random-entry
-
-	   :channel
-	   :msg-type
-	   :sender
-	   
-	   :user
-	   :user-equal
-	   :hostmask))
-
 (in-package :lispbot)
 
  ;;;;;;;;;;;;;;
@@ -75,19 +42,22 @@
     :documentation "the nickname of the bot"))
   (:documentation "a irc bot"))
 
-;; TODO: implement
+;; TODO: implement (suggestion: implement as (setf (channels bot)))
 (defgeneric join (bot channels)
   (:documentation "join one or more chans"))
 
-;; TODO: implement
+;; TODO: implement (same suggestion as above)
 (defgeneric leave (bot channels)
   (:documentation "leave one ore more chans"))
 
 ;; TODO: implement
 (defgeneric (setf nick) (bot newnick)
-  (:documentation "change the nick of the bot. return the nick on success and nil otherwise"))
+  (:documentation "change the nick of the bot."))
 
 (defun make-bot (nick channels &rest plugins)
+  "return a new bot with the nickname NICK witch joins the channels CHANNELS.
+plugins can be instances of classes derived from PLUGIN, names of classes
+derived from PLUGIN or lists of those including lists of lists of ..."
   (labels ((make-plugins (plugins bot)
 	     (loop for p in plugins appending
 		  (cond
@@ -103,6 +73,7 @@
       (setf (slot-value bot 'plugins) (make-plugins plugins bot))
       bot)))
 
+;; TODO: allow adding instances of the plugin class
 (defun add-plugin (bot plugin-class)
   (unless (some (lambda (x) (eq (class-name (class-of x)) plugin-class)) (plugins bot))
     (push (make-instance plugin-class :bot bot) (slot-value bot 'plugins))))
@@ -122,12 +93,13 @@
   (:documentation "disconnect the bot from server"))
 
 ;;;
-;;;;; The funktions in this section should only be called from commands, or a reimplemented 'message' method
+;;;;; The funktions in this section should only be called from commands, or a reimplemented 'handle-event' method
 ;;;
 
 ;; if message is not a string but a list of string, the bot will say multiple messages. each for every entry in the list
 (defgeneric reply (message &optional to-user-p)
-  (:documentation "can be used by plugins to let the bot say something. message can be a list of strings or a string"))
+  (:documentation "can be used by plugins to let the bot say something. message can be a list of strings or a string.
+If to-user-p is t, address the user of the last received message directly"))
 
 (defgeneric action (message)
   (:documentation "can be used by plugins write a /me message"))
@@ -158,8 +130,8 @@
 (defgeneric connected (plugin)
   (:documentation "called when the bot is connected and the channel is joined"))
 
-(defgeneric message (plugin message)
-  (:documentation "called when someone said something to the bot, should not be used"))
+(defgeneric handle-event (plugin event)
+  (:documentation "plugins can implement this for the various events"))
 
 (defgeneric help (plugin)
   (:documentation "called when the user requests help for a plugin"))
@@ -169,6 +141,12 @@
      ,@body))
 
 (defmacro defcommand (name ((plvar plclass) &rest args) &body body)
+  "define a new command for the plugin PLCLASS. NAME can be a string, or
+a symbol (in witch case the command will be the lowercase symbolname. All
+other parameters ARGS are matched against the command arguments to the
+command, that was issued in a channel or a query. Note that this currently
+has some limitations, such as not supporting multi-word arguments, or
+keyword parameters."
   (with-gensyms (command closure)
    `(let ((,command (assoc ',name (get ',plclass :commands)))
 	  (,closure (lambda (,plvar ,@args) ,@body)))
@@ -201,34 +179,6 @@
 
 (defgeneric hostmask (user)
   (:documentation "return a host mask of the form nick!username@host"))
-
- ;;;;;;;;;;;;;;;;;;;
-;;                 ;;
-;;  Message Class  ;;
-;;                 ;;
- ;;;;;;;;;;;;;;;;;;;
-
-(defclass message ()
-  ((text
-    :initform ""
-    :reader text
-    :initarg :text)
-   (type
-    :initform :public
-    :reader msg-type
-    :initarg :type
-    :documentation "can be either :public for channel messages or :private for queries")
-   (from
-    :reader sender
-    :initarg :from)
-   (bot
-    :reader bot
-    :initarg :bot)
-   (channel
-    :reader channel
-    :initarg :channel
-    :initform nil
-    :documentation "nil if query")))
 
  ;;;;;;;;;;;;;;;;;;;;;
 ;;                   ;;
@@ -272,19 +222,22 @@ or the 'message' method of plugins")
 
 (defun call-plugin-callbacks (message)
   (dolist (plugin (plugins (bot message)))
-    (let ((*last-message* message))
-      (dolist (command (get (class-name (class-of plugin)) :commands))
-	(let ((name (car command)) (function (cdr command)))
-	  (multiple-value-bind (match msg)
-	      (ppcre:scan-to-strings (format nil "^~a(\\W+(.*))?" (if (symbolp name)
-								      (string-downcase (symbol-name name))
-								      name))
-				     (text message))
-	    (when match
-	      (handler-case
-		  (apply function plugin (partition:split-sequence #\Space (elt msg 1) :remove-empty-subseqs t))
-		(error (err) (handle-errors-in-plugin err plugin message)))))))
-      (message plugin *last-message*))))
+    (let ((*last-message* message) (type (typeof message)))
+      (when (or (eq type 'channel-message 'query-message))
+	(dolist (command (get (class-name (class-of plugin)) :commands))
+	  (let ((name (car command)) (function (cdr command)))
+	    (multiple-value-bind (match msg)
+		(ppcre:scan-to-strings (format nil "^~a(\\W+(.*))?" (if (symbolp name)
+									(string-downcase (symbol-name name))
+									name))
+				       (text message))
+	      (when match
+		(handler-case
+		    ;; TODO: implement our own 'Argument String' -> 'Lambda list' function that handles quotes
+		    ;;       and keyword parameters
+		    (apply function plugin (partition:split-sequence #\Space (elt msg 1) :remove-empty-subseqs t))
+		  (error (err) (handle-errors-in-plugin err plugin message))))))))
+      (handle-event plugin *last-message*))))
 
  ;;;;;;;;;;;;;;;;;;;
 ;;                 ;;
@@ -300,19 +253,20 @@ or the 'message' method of plugins")
     (connected plugin)))
 
 (defun handle-priv-message (message)
-  (with-slots (bot text type) message
-    (case type
-      (:public
+  (with-slots (bot text) message
+    (case (typeof message)
+      ('channel-message
        (multiple-value-bind (match msg)
 	   (ppcre:scan-to-strings (concatenate 'string "^(" (nick bot) "\\W+|!)(.*)") text)
 	 (when match
+	   (setf (original-text message) text)
 	   (setf text (elt msg 1))
 	   (call-plugin-callbacks message))))
-      (:private
+      ('query-message
        (call-plugin-callbacks message)))))
 
 (defhook irc:irc-privmsg-message (bot irc-message)
-  (let ((message (message-to-message irc-message bot)))
+  (let ((message (make-event irc-message bot)))
     (handle-priv-message message)))
 
  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -352,8 +306,9 @@ or the 'message' method of plugins")
    (setf connection nil)))
 
 (defmethod connected ((plugin plugin)) nil)
-(defmethod message ((plugin plugin) message) nil)
+(defmethod handle-event ((plugin plugin) (event event)) nil)
 
+;; TODO: implement reply and action on a more generic function call something like 'send'
 (defmethod reply (texts &optional to-user-p)
   (when *last-message*
     (with-slots (bot type from) *last-message*
@@ -381,26 +336,12 @@ or the 'message' method of plugins")
   (declare (ignore plugin))
   :unimplemented-help)
 
-(defun extract-user-from-irc-message (message)
-  (make-instance 'user
-		 :nick (irc:source message)
-		 :host (irc:host message)
-		 :username (irc:user message)))
-
-(defun message-to-message (message bot)
-  (let ((channel (find (elt (irc:arguments message) 0) (channels bot) :test #'string=)))
-    (make-instance 'message
-		   :text (car (last (irc:arguments message)))
-		   :from (extract-user-from-irc-message message)
-		   :bot bot
-		   :channel channel
-		   :type (if channel :public :private))))
-
 (defmethod user-equal ((user1 user) (user2 user))
   (and (string-equal (nick user1) (nick user2))
        (string-equal (host user1) (host user2))
        (string-equal (name user1) (name user2))))
 
+;; TODO: also specialize the hostmask function on the bot class
 (defmethod hostmask ((user user))
   (format nil
 	  "~a!~a@~a"
