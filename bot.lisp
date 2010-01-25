@@ -88,11 +88,20 @@
   (:documentation "change the nick of the bot. return the nick on success and nil otherwise"))
 
 (defun make-bot (nick channels &rest plugins)
-  (let ((bot (make-instance 'bot
-			    :channels (mklist channels)
-			    :nick nick)))
-    (setf (slot-value bot 'plugins) (mapcar (lambda (x) (make-instance x :bot bot)) plugins))
-    bot))
+  (labels ((make-plugins (plugins bot)
+	     (loop for p in plugins appending
+		  (cond
+		    ((listp p) (make-plugins p bot))
+		    ((symbolp p) (mklist (make-instance p :bot bot)))
+		    ((subtypep (type-of p) 'plugin) (progn
+						      (setf (slot-value p 'bot) bot)
+						      (mklist p)))
+		    (t (error "strange plugin: ~a" p))))))
+    (let ((bot (make-instance 'bot
+			      :channels (mklist channels)
+			      :nick nick)))
+      (setf (slot-value bot 'plugins) (make-plugins plugins bot))
+      bot)))
 
 (defun add-plugin (bot plugin-class)
   (unless (some (lambda (x) (eq (class-name (class-of x)) plugin-class)) (plugins bot))
