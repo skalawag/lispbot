@@ -69,3 +69,23 @@ command prefix")
 		       :text text
 		       :from sender
 		       :bot bot))))
+
+(defclass user-event (event)
+  ((user
+    :initarg :user
+    :reader user
+    :documentation "The user who caused this event"))
+  (:documentation "Base class for all events that have something to do with user-management"))
+
+(defclass join-event (user-event))
+
+(defmethod make-event ((message irc:irc-join-message) bot)
+  (make-instance 'join-event
+		 :user (extract-user-from-irc-message message)))
+
+(defclass part-event (user-event)
+  ((message
+    :initarg :message
+    :reader part-message
+    :documentation "part message")))
+
