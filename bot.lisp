@@ -24,6 +24,7 @@
   ((connection
     :initform nil
     :type irc:connection
+    :reader connection
     :documentation "internal connection representation")
    (channels        ;; list of strings. TODO: add channel class, that for example keeps track of users
     :initform nil
@@ -92,26 +93,21 @@ derived from PLUGIN or lists of those including lists of lists of ..."
 (defgeneric disconnect (bot)
   (:documentation "disconnect the bot from server"))
 
-;;;
-;;;;; The funktions in this section should only be called from commands, or a reimplemented 'handle-event' method
-;;;
+(defgeneric send (lines to bot)
+  (:documentation "send a privmsg to TO (which can be a chan or a user)"))
 
-;; if message is not a string but a list of string, the bot will say multiple messages. each for every entry in the list
-(defgeneric reply (message &optional to-user-p)
+;; Convenience functions. Should only be called from commands, or some reimplemented handle-event methods
+
+(defgeneric reply (texts &optional to-user-p)
   (:documentation "can be used by plugins to let the bot say something. message can be a list of strings or a string.
 If to-user-p is t, address the user of the last received message directly"))
 
-(defgeneric action (message)
+(defgeneric action (texts)
   (:documentation "can be used by plugins write a /me message"))
 
 ;; TODO: implement some sort of translation system
 (defun l10n (string)
   string)
-
-;;;
-;;;;;; End section
-;;;
-
 
  ;;;;;;;;;;;;;;;;;
 ;;               ;;
@@ -180,6 +176,9 @@ keyword parameters."
 (defgeneric hostmask (user)
   (:documentation "return a host mask of the form nick!username@host"))
 
+(defun userp (object)
+  (eq (type-of object) 'user))
+
  ;;;;;;;;;;;;;;;;;;;;;
 ;;                   ;;
 ;; Utility functions ;;
@@ -222,8 +221,8 @@ or the 'message' method of plugins")
 
 (defun call-plugin-callbacks (message)
   (dolist (plugin (plugins (bot message)))
-    (let ((*last-message* message) (type (typeof message)))
-      (when (or (eq type 'channel-message 'query-message))
+    (let ((*last-message* message) (type (type-of message)))
+      (when (or (eq type 'channel-message) (eq type 'query-message))
 	(dolist (command (get (class-name (class-of plugin)) :commands))
 	  (let ((name (car command)) (function (cdr command)))
 	    (multiple-value-bind (match msg)
@@ -254,20 +253,26 @@ or the 'message' method of plugins")
 
 (defun handle-priv-message (message)
   (with-slots (bot text) message
-    (case (typeof message)
-      ('channel-message
+    (case (type-of message)
+      (channel-message
        (multiple-value-bind (match msg)
 	   (ppcre:scan-to-strings (concatenate 'string "^(" (nick bot) "\\W+|!)(.*)") text)
 	 (when match
 	   (setf (original-text message) text)
 	   (setf text (elt msg 1))
 	   (call-plugin-callbacks message))))
-      ('query-message
+      (query-message
        (call-plugin-callbacks message)))))
 
 (defhook irc:irc-privmsg-message (bot irc-message)
   (let ((message (make-event irc-message bot)))
     (handle-priv-message message)))
+
+(defhook irc:irc-join-message (bot irc-message)
+  (let ((*last-message* (make-event irc-message bot)))
+    (when (not (string= (nick bot) (nick (user *last-message*))))
+     (dolist (p (plugins bot))
+       (handle-event p *last-message*)))))
 
  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;                              ;;
@@ -308,29 +313,48 @@ or the 'message' method of plugins")
 (defmethod connected ((plugin plugin)) nil)
 (defmethod handle-event ((plugin plugin) (event event)) nil)
 
-;; TODO: implement reply and action on a more generic function call something like 'send'
-(defmethod reply (texts &optional to-user-p)
-  (when *last-message*
-    (with-slots (bot type from) *last-message*
-      (let ((destination (or (channel *last-message*)
-			     (nick (sender *last-message*)))))
-	(if (listp texts)
-	    (loop for msg in texts
-	       for i from 1
-	       do (progn
-		    (irc:privmsg (slot-value bot 'connection) destination
-				 (if (and to-user-p (equal i 1))
-				     (format nil "~a: ~a" (nick from) msg)
-				     msg))
-		    (when (divisible i 3) ;; avoid flooding
-		      (sleep 1))))
-	    (irc:privmsg (slot-value bot 'connection) destination texts))))))
+(defmethod send (lines to (bot bot))
+  (let ((connection (connection bot))
+	(to (if (userp to) (nick to) to)))
+   (loop for msg in (mklist lines)
+      for i from 1
+      do (progn
+	   (irc:privmsg connection to msg)
+	   (when (divisible i 3)
+	     (sleep 1))))))
 
-(defmethod action ((message string))
-  (let ((destination (or (channel *last-message*)
-			 (nick (sender *last-message*)))))
-    (irc:privmsg (slot-value (bot *last-message*) 'connection) destination
-		 (format nil "~AACTION ~A~A" (code-char 1) message (code-char 1)))))
+(defgeneric reply-to-event (message lines &optional to-user-p))
+
+(defun address-user (lines nick)
+  (mapcar (lambda (x)
+	    (format nil "~a: ~a" nick x))
+	  (mklist lines)))
+
+(defmethod reply-to-event ((message channel-message) lines &optional to-user-p)
+  (send (if to-user-p
+	    (address-user lines (nick (sender message)))
+	    lines)
+	(channel message) (bot message)))
+
+(defmethod reply-to-event ((message query-message) lines &optional to-user-p)
+  (declare (ignore to-user-p))
+  (send lines (sender message) (bot message)))
+
+(defmethod reply-to-event ((event join-event) lines &optional to-user-p)
+  (send (if to-user-p
+	    (address-user lines (nick (user event)))
+	    lines)
+	(channel event) (bot event)))
+
+(defmethod reply (lines &optional to-user-p)
+  (reply-to-event *last-message* lines to-user-p))
+
+(defmethod action (lines)
+  (let ((delimiter (code-char 1))) ;; CTCP delimiter for ACTION is ascii 0x1
+   (reply-to-event *last-message*
+		   (mapcar (lambda (x)
+			     (format nil "~aACTION ~a~a" delimiter x delimiter))
+			   (mklist lines)))))
 
 (defmethod help ((plugin plugin))
   (declare (ignore plugin))

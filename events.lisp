@@ -1,4 +1,3 @@
-
 ;; Events are organized as a class hirarchy. Plugins can specialize
 ;; the generic function HANDLE-EVENT on one of these classes to
 ;; receive the events it is interested in.
@@ -77,11 +76,17 @@ command prefix")
     :documentation "The user who caused this event"))
   (:documentation "Base class for all events that have something to do with user-management"))
 
-(defclass join-event (user-event))
+(defclass join-event (user-event)
+  ((channel
+    :initarg :channel
+    :reader channel
+    :documentation "The channel that was joined")))
 
 (defmethod make-event ((message irc:irc-join-message) bot)
   (make-instance 'join-event
-		 :user (extract-user-from-irc-message message)))
+		 :user (extract-user-from-irc-message message)
+		 :channel (car (irc:arguments message))
+		 :bot bot))
 
 (defclass part-event (user-event)
   ((message
@@ -89,3 +94,8 @@ command prefix")
     :reader part-message
     :documentation "part message")))
 
+(defmethod make-event ((message irc:irc-part-message) bot)
+  (make-instance 'part-event
+		 :user (extract-user-from-irc-message message)
+		 :message (last (irc:arguments message))
+		 :bot bot))

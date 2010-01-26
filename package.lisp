@@ -13,6 +13,7 @@
 	   :read-loop
 	   :reply
 	   :action
+	   :send
 
 	   :plugin
 	   :name
@@ -31,6 +32,9 @@
 	   :channel-message
 	   :channel
 	   :query-message
+	   :user-event
+	   :join-event
+	   :part-event
 
 	   :user
 	   :user-equal
