@@ -1,0 +1,38 @@
+INSTALLATON
+===========
+
+DEPENDENCIES
+------------
+
+ * cl-ppcre (http://weitz.de/cl-ppcre)
+ * cl-irc (http://common-lisp.net/project/cl-irc)
+
+Please note, that currently there seems to be some incompatibility between
+cl-irc and its dependency flexi-streams. If you get an error about some symbol
+from flexi streams not being found, please use the SVN version of cl-irc.
+
+ASDF
+----
+
+If you want to use ASDF to load the lispbot, create symbolic links from the .asd
+files in the root and plugin directorys to a place where asdf looks for system
+definition files. For example ~/.sbcl/systems.
+
+If you use a lisp implementaton that doesn't bundle asdf, you probably have to
+load the asdf.lisp file from somewhere.
+
+When asdf is loaded you should be able to load/compile the lispbot with:
+
+	(asdf:oos 'asdf:load-op 'lispbot)
+	(asdf:oos 'asdf:load-op 'lispbot-plugins)
+
+NON ASDF
+--------
+
+It is also possible, though not recommended, to just load all the .lisp files
+without asdf.
+
+
+
+For usage of the lispbot see the README file.
+
