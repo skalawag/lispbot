@@ -6,6 +6,7 @@ DEPENDENCIES
 
  * cl-ppcre (http://weitz.de/cl-ppcre)
  * cl-irc (http://common-lisp.net/project/cl-irc)
+ * split-sequence (http://www.cliki.net/SPLIT-SEQUENCE)
 
 Please note, that currently there seems to be some incompatibility between
 cl-irc and its dependency flexi-streams. If you get an error about some symbol
