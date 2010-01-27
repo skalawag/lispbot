@@ -346,6 +346,11 @@ or the 'message' method of plugins")
 	    lines)
 	(channel event) (bot event)))
 
+(defmethod reply-to-event ((event (eql nil)) lines &optional to-user-p)
+  (declare (ignore event))
+  (declare (ignore lines))
+  (declare (ignore to-user-p)))
+
 (defmethod reply (lines &optional to-user-p)
   (reply-to-event *last-message* lines to-user-p))
 

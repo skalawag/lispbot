@@ -151,7 +151,7 @@
     (dice-expression)))
 
 (defclass dice-plugin (plugin)
-  ((name :initform "dices")))
+  ((name :initform "dice")))
 
 (defmethod help ((plugin dice-plugin))
   (reply '("!roll <expr>: rolls dices for you"
