@@ -16,9 +16,9 @@ The plugins can be either the classname of a plugin (e.g.
 For example:
 
         (bot:make-bot "lispbot" '("#chan1" "#chan2")
-                      'bot-plugins:help-plugin
-                      'bot-plugins:dice-plugin
-                      (make-instance 'bot-plugins:greet-plugin
+                      'bot.plugins:help-plugin
+                      'bot.plugins:dice-plugin
+                      (make-instance 'bot.plugins:greet-plugin
                                      :greet-new-users t))
 
 
