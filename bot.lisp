@@ -116,7 +116,10 @@ If to-user-p is t, address the user of the last received message directly"))
  ;;;;;;;;;;;;;;;;;
 
 (defclass plugin ()
-  ((name :initform (error "Plugins need names") :reader name)
+  ((name
+    :initform (error "Plugins need names")
+    :accessor name
+    :initarg :name)
    (bot
     :initform nil
     :reader bot

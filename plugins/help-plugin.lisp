@@ -3,7 +3,8 @@
 (in-package :lispbot.plugins)
 
 (defclass help-plugin (plugin)
-  ((name :initform "hilfe")))
+  ()
+  (:default-initargs :name "help"))
 
 (defun helpfull-plugin-p (plugin)
   (let ((bot::*last-message* nil))

@@ -1,11 +1,11 @@
 (in-package :lispbot.plugins)
 
 (defclass greet-plugin (plugin)
-  ((name :initform "greet")
-   (greet-new-users
+  ((greet-new-users
     :initarg :greet-new-users
     :initform nil
-    :accessor greet-new-users-p)))
+    :accessor greet-new-users-p))
+  (:default-initargs :name "greet"))
 
 (defmethod help ((plugin greet-plugin))
   (reply "!greet [user|me]: greet someone"))
