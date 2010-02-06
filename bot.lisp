@@ -34,7 +34,7 @@
    (plugins
     :initform nil
     :initarg :plugins
-    :reader plugins
+    :accessor plugins
     :documentation "list of plugins for this bot")
    (nick
     :initform "lispbot"
@@ -75,9 +75,15 @@ derived from PLUGIN or lists of those including lists of lists of ..."
       bot)))
 
 ;; TODO: allow adding instances of the plugin class
-(defun add-plugin (bot plugin-class)
-  (unless (some (lambda (x) (eq (class-name (class-of x)) plugin-class)) (plugins bot))
-    (push (make-instance plugin-class :bot bot) (slot-value bot 'plugins))))
+(defun add-plugins (bot &rest plugins)
+  (setf (plugins bot)
+	(append (plugins bot)
+		(mapcar (lambda (x)
+			  (cond
+			    ((symbolp x) (make-instance x :bot bot))
+			    ((subtypep (type-of x) 'plugin) x)
+			    (t (error "strange plugin: ~a" x))))
+			plugins))))
 
 (defgeneric connect (bot server &optional port)
   (:documentation "let the bot connect to irc server and join its chans"))

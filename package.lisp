@@ -3,7 +3,7 @@
   (:nicknames :bot)
   (:export :bot
 	   :make-bot
-	   :add-plugin
+	   :add-plugins
 	   :plugins
 	   :channels
 	   :nick
@@ -21,6 +21,7 @@
 	   :help
 	   :connected
 	   :handle-event
+	   :*last-message*
 
 	   :random-entry
 
