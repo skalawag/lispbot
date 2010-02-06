@@ -11,5 +11,9 @@
 		      :depends-on ("package"))
 	       (:file "help-plugin"
 		      :depends-on ("package"))
+	       (:file "decide-plugin"
+		      :depends-on ("package"))
+	       (:file "rememerber-plugin"
+		      :depends-on ("package"))
 	       (:file "package"))
   :depends-on (:lispbot))
