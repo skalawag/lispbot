@@ -1,0 +1,81 @@
+@ifclear included
+@settitle INSTALL
+@node Top
+@top INSTALL
+@menu
+* Installation:: none
+@end menu
+@end ifclear
+
+@node Installation
+@chapter Installation
+
+Here is a guide to installing the Lispbot on your system.
+
+It assumes that you have some basic knowledge of your LISP environment.
+
+@menu
+* Download::            Where to get the Lispbot.
+* Dependencies::        Required packages.
+* ASDF::                Installation using ASDF.
+* Non ASDF::            Installation without ASDF.
+@end menu
+
+@node Download
+@section Download
+
+As there is no released version of Lispbot yet, you have to get it from
+git. This has the advantage, that you can stay up to date easily.
+
+To download the master branch of the lispbot type:
+
+@example
+git clone git://gitorious.org/lispbot/lispbot.git
+@end example
+
+You can than get the latest changes by @code{cd}'ing into the lispbot
+directory and typing:
+
+@example
+git pull
+@end example
+
+@node Dependencies
+@section Dependencies
+
+Lispbot depends on the following external libraries:
+
+@itemize
+@item cl-ppcre (http://weitz.de/cl-ppcre)
+@item cl-irc (http://common-lisp.net/project/cl-irc)
+@item split-sequence (http://www.cliki.net/SPLIT-SEQUENCE)
+@end itemize
+
+Please note that currently there seems to be some incompatibility between
+cl-irc and its dependency flexi-streams. If you get an error about a symbol
+from flexi-streams not being found, please use the SVN version of cl-irc.
+
+@node ASDF
+@section ASDF
+
+If you want to use ASDF to load the lispbot, create symbolic links from the .asd
+files in the root and plugin directories to a place where asdf looks for system
+definition files. For example @file{~/.sbcl/systems}.
+
+If you use a lisp implementation that doesn't bundle asdf, you probably have to
+load the asdf.lisp file from somewhere.
+
+When asdf is loaded and all the dependencies are installed, you should
+be able to load/compile the lispbot with:
+
+@example
+(asdf:oos 'asdf:load-op 'lispbot)
+(asdf:oos 'asdf:load-op 'lispbot-plugins)
+@end example
+
+@node Non ASDF
+@section Non ASDF
+
+It is also possible, though not recommended, to just load all the .lisp files
+without asdf.
+

@@ -1,0 +1,84 @@
+@node Bot control
+@chapter Bot control
+
+This is a complete description of how to use the bots features
+interactively or from scripts. @xref{Writing plugins}, for further
+control over the bot.
+
+The bot is commonly started from a lisp REPL, but nobody stops you from
+writing the commands described here in a lisp script and execute it to
+start the bot.
+
+@ifclear included
+See INSTALL for details.
+@end ifclear
+@ifset included
+@xref{Installation}, for details.
+@end ifset
+
+@menu
+* Configuring::         How to create a bot instance
+* Running::             Connecting to server and entering the read loop
+* Stopping::            Disconnecting the bot
+@end menu
+
+@node Configuring
+@section Configuring
+
+The bot configuration is controlled trough an instance of the class
+@code{bot}.
+
+To let a bot connect to a server and join channels, you have to create a
+bot-instance and give it the necessary options and flags.
+
+The basic function for doing this is:
+
+@deffn Function make-bot nick channel plug-ins @dots{}
+Create a bot instance.
+
+@var{nick} is the nickname which the bot tries to use when it connects
+to a IRC-server.
+
+The @var{channel} argument is either a single string with a channel name or a
+list of such strings. In this case, the bot will join them all.
+
+The @var{plug-ins} arguments can be either the class of a plug-in
+(e.g. @code{bot-plugins:help-plugin}), an instance of a plug-in or a
+list of any of those.
+
+This means that you can create a list of configured plugin instances
+beforehand so that you don't have to specify them every time when you
+recreate your bot.
+
+Example usage:
+
+@example
+(bot:make-bot "lispbot" '("#chan1" "#chan2")
+              'bot.plugins:help-plugin
+              'bot.plugins:dice-plugin
+              (make-instance 'bot.plugins:greet-plugin
+                             :greet-new-users t))
+@end example
+
+Typically (for interactive use) you will save the returned bot instance
+in a global variable to be able to refer to it later.
+@end deffn
+
+@node Running
+@section Running
+
+Currently, running the bot consists of two steps. First you have to
+connect the bot with an IRC-server. Then you have to let the bot
+enter a read-loop from where it doesn't return until it gets
+disconnected.
+
+We are aware that this is no ideal situation. Once support for threads
+is added to the bot, this will be much easier.
+
+@deffn Function connect bot server [port]
+
+@end deffn
+
+@node Stopping
+@section Stopping
+

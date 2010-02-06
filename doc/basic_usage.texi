@@ -1,0 +1,58 @@
+@ifclear included
+@settitle README
+@node Top
+@top README
+@menu
+* Basic Usage:: none
+@end menu
+@end ifclear
+
+@node Basic Usage
+@chapter Basic Usage
+
+Here is a brief description of a few quick steps to get the Lispbot up
+and running.
+
+Firstly you have to install and/or load the bot. See
+@ifclear included
+INSTALL,
+@end ifclear
+@ifset included
+@ref{Installation},
+@end ifset
+for details.
+
+Then you have to create a bot instance. This is done by:
+
+@example
+(make-bot "nick" "#mychannel" plugin1 plugin2...)
+@end example
+
+The second argument can also be a list of channels. The bot will join them all.
+
+The plugins can either be the classname of a plugin (e.g.
+'bot-plugins:help-plugin), an instance of a plugin or a list of any of those.
+
+For example:
+
+@example
+(bot:make-bot "lispbot" '("#chan1" "#chan2")
+              'bot.plugins:help-plugin
+              'bot.plugins:dice-plugin
+              (make-instance 'bot.plugins:greet-plugin
+                             :greet-new-users t))
+@end example
+
+
+To let the bot connect to a server and start, type:
+
+@example
+(bot:connect bot "example.com")
+(bot:read-loop bot)
+@end example
+
+You can stop the bot by interrupting the read-loop (typically @kbd{C-c}) and type:
+
+@example
+(bot:disconnect bot)
+@end example

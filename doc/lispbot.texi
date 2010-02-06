@@ -1,0 +1,69 @@
+\input texinfo
+@c %**start of header
+@setfilename lispbot_manual.info
+@settitle Lispbot user manual
+@set included
+@c %**end of header
+
+@copying
+This is the user manual for the lispbot, a IRC-bot framework written in
+Common Lisp.
+
+Copyright @copyright{}  2010  Hans-Peter Deifel.
+
+@quotation
+Permission is granted to copy, distribute and/or modify this document
+under the terms of the GNU Free Documentation License, Version 1.3
+or any later version published by the Free Software Foundation;
+A copy of the license is included in the Texinfo sources of this manual.
+See @samp{Installation} for a link.
+@end quotation
+@end copying
+
+@titlepage
+@title Lispbot User Manual
+
+@insertcopying
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top Lispbot
+
+@insertcopying
+@end ifnottex
+
+@menu
+* Overview::            Overview over the features of the Lispbot
+* Installation::        How to Install the Lispbot 
+* Basic Usage::         Quick start
+* Bot control::         Controlling the bot from the REPL or scrips
+* Writing plugins::     Write your own plugins
+* Index::               Complete index.
+@end menu
+
+@node Overview
+@chapter Overview
+
+Todo.
+
+
+@include installation.texi
+
+@include basic_usage.texi
+
+@include bot_control.texi
+
+@node Writing plugins
+@chapter Writing plugins
+
+Todo.
+
+@node Index
+@unnumbered Index
+
+@printindex cp
+
+@bye
