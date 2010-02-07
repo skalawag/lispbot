@@ -16,4 +16,4 @@
 	       (:file "rememerber-plugin"
 		      :depends-on ("package"))
 	       (:file "package"))
-  :depends-on (:lispbot))
+  :depends-on (:lispbot :alexandria))

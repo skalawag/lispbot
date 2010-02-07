@@ -12,4 +12,4 @@
   (declare (ignore plugin))
   (if (null args)
       (if (= (random 2) 0) (reply "Yes" t) (reply "No" t))
-      (reply (nth (random (1+ (length args))) (cons arg1 args)) t)))
+      (reply (random-elt (cons arg1 args)) t)))

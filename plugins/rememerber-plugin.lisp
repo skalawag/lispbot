@@ -8,12 +8,23 @@
     :accessor remembered-things ;; exported
     :accessor things
     :type hash-table
-    :documentation "hashtable of remembered things"))
+    :documentation "hashtable of remembered things")
+   (file
+    :initform (make-pathname :name "remembered-things")
+    :initarg :file
+    :accessor file
+    :type pathname
+    :documentation "relative pathname of the file where the hashtable will be
+saved (default is 'remembered-things')"))
   (:default-initargs :name "remember"))
 
-(defcommand remember ((plugin remember-plugin) thing is &rest definition)
-  (when (not (or (string= is "is") (string= is "=")))
-    (error "bad syntax for remember. see help for details"))
+(defgeneric save-remembered (plugin &key filename)
+  (:documentation "save the all the remembered things"))
+
+(defgeneric load-remembered (plugin &key filename)
+  (:documentation "load the file of remembered things into plugin"))
+
+(defcommand remember ((plugin remember-plugin) thing &rest definition)
   (push (format nil "~{~a~^ ~}" definition) (gethash thing (things plugin)))
   (reply "ok. remembered." t))
 
@@ -22,12 +33,14 @@
     (error "bad syntax for tell. see help for details"))
   (let ((found (gethash thing (things plugin))))
     (if found
-	(reply (format nil "~@[~a: ~]~a is ~{~a~^ and ~}"
-		       (cond
-			 ((string= whom "us") nil)
-			 ((string= whom "me") (nick (sender *last-message*)))
-			 (t whom))
-		       thing
+	(reply (mapcar (lambda (x)
+			 (format nil "~@[~a: ~]~a ~a"
+				 (cond
+				   ((string= whom "us") nil)
+				   ((string= whom "me") (nick (sender *last-message*)))
+				   (t whom))
+				 thing
+				 x))
 		       found))
 	(reply "i don't know about such a thing" t))))
 
@@ -56,8 +69,26 @@
 
 (defmethod help ((plugin remember-plugin))
   (reply '("A plugin to remember facts."
-	  "!remember thing {is|=} definition: learn a new definition for \"thing\""
+	  "!remember thing definition: learn a new definition for \"thing\""
 	  "!tell {nick|me|us} about thing: tell someone what i learned about \"thing\""
-	  "!forget thing [index]: forget what i learned about \"thing\". (optionally only the index's fact.)")))
+	  "!forget thing [i]: forget what i learned about \"thing\". (optionally only the ith fact.)")))
 
-;;; TODO: include some ability to save the remembered things to disc
+(defmethod save-remembered ((plugin remember-plugin) &key filename)
+  (let ((filename (or filename
+		      (merge-pathnames (file plugin)
+				       (data-dir (bot plugin))))))
+    (ensure-directories-exist filename)
+    (with-open-file (stream filename
+			    :direction :output
+			    :if-exists :overwrite
+			    :if-does-not-exist :create)
+      (pprint (hash-table-alist (things plugin)) stream))))
+
+(defmethod load-remembered ((plugin remember-plugin) &key filename)
+  (let ((filename (or filename
+		      (merge-pathnames (file plugin)
+				       (data-dir (bot plugin))))))
+    (ensure-directories-exist filename)
+    (with-open-file (stream filename)
+      (setf (things plugin)
+	    (alist-hash-table (read stream) :test 'equal)))))

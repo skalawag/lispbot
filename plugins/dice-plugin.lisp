@@ -156,7 +156,7 @@
 
 (defmethod help ((plugin dice-plugin))
   (reply '("!roll <expr>: rolls dices for you"
-	   "expr is a expression of the form: 3* 2w20 + 4")))
+	   "expr is a expression of the form: 3* 2d20 + 4")))
 
 (defcommand roll ((plugin dice-plugin) &rest args)
   (declare (ignore plugin))
