@@ -2,6 +2,8 @@
   (:use :cl :alexandria)
   (:nicknames :bot)
   (:export :*default-data-directory*
+	   :*debug*
+
 	   :bot
 	   :make-bot
 	   :add-plugins
@@ -10,18 +12,16 @@
 	   :nick
 	   :data-dir
 
-	   :connect
-	   :disconnect
-	   :read-loop
 	   :reply
 	   :action
 	   :send
+	   :start
+	   :stop
 
 	   :plugin
 	   :name
 	   :defcommand
 	   :help
-	   :connected
 	   :handle-event
 	   :*last-message*
 

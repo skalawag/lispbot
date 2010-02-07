@@ -24,6 +24,9 @@
   (merge-pathnames ".lispbot/" (user-homedir-pathname))
   "the default place where the bot and plugins will create their files")
 
+(defvar *debug* nil
+  "print debug output?")
+
  ;;;;;;;;;;;;;;
 ;;            ;;
 ;; Bot Class  ;;
@@ -58,22 +61,19 @@
     :documentation "the direectory where the bot and plugins will store there files"))
   (:documentation "a irc bot"))
 
-;; TODO: implement (suggestion: implement as (setf (channels bot)))
-(defgeneric join (bot channels)
-  (:documentation "join one or more chans"))
-
-;; TODO: implement (same suggestion as above)
-(defgeneric leave (bot channels)
-  (:documentation "leave one ore more chans"))
-
-;; TODO: implement
-(defgeneric (setf nick) (bot newnick)
-  (:documentation "change the nick of the bot."))
-
-(defun make-bot (nick channels &rest plugins)
+(defun make-bot (nick channels &key plugins data-dir)
   "return a new bot with the nickname NICK witch joins the channels CHANNELS.
 plugins can be instances of classes derived from PLUGIN, names of classes
 derived from PLUGIN or lists of those including lists of lists of ..."
+  (let ((bot (make-instance 'bot
+			    :channels (ensure-list channels)
+			    :nick nick)))
+    (add-plugins bot plugins)
+    (when data-dir (setf (data-dir bot) data-dir))
+    bot))
+
+(defun add-plugins (bot &rest plugins)
+  "add plugins plugins to the bots plugin-list"
   (labels ((make-plugins (plugins bot)
 	     (loop for p in plugins appending
 		  (cond
@@ -83,41 +83,20 @@ derived from PLUGIN or lists of those including lists of lists of ..."
 						      (setf (slot-value p 'bot) bot)
 						      (ensure-list p)))
 		    (t (error "strange plugin: ~a" p))))))
-    (let ((bot (make-instance 'bot
-			      :channels (ensure-list channels)
-			      :nick nick)))
-      (setf (slot-value bot 'plugins) (make-plugins plugins bot))
-      bot)))
+    (setf (plugins bot) (make-plugins plugins bot))))
 
-;; TODO: allow adding instances of the plugin class
-(defun add-plugins (bot &rest plugins)
-  (setf (plugins bot)
-	(append (plugins bot)
-		(mapcar (lambda (x)
-			  (cond
-			    ((symbolp x) (make-instance x :bot bot))
-			    ((subtypep (type-of x) 'plugin) x)
-			    (t (error "strange plugin: ~a" x))))
-			plugins))))
+(defgeneric start (bot server &optional port)
+  (:documentation "connect to server and enter read loop"))
 
-(defgeneric connect (bot server &optional port)
-  (:documentation "let the bot connect to irc server and join its chans"))
+(defgeneric stop (bot)
+  (:documentation "disconnect from server"))
 
-;; TODO: add threads, to make this asyncronous
-(defgeneric read-loop (bot)
-  (:documentation "enter the read loop"))
+(defgeneric send (lines to bot &key actionp)
+  (:documentation "send a privmsg to TO (which can be a chan or a user).
+If `actionp' is true, use the ctcp action command"))
 
-;; Proposed implementation of this asyncronous start
-(defgeneric run-bot (bot server &optional port)
-  (:documentation "connect to server, join channels and enter read-loop"))
-
-(defgeneric disconnect (bot)
-  (:documentation "disconnect the bot from server"))
-
-(defgeneric send (lines to bot)
-  (:documentation "send a privmsg to TO (which can be a chan or a user)"))
-
-;; Convenience functions. Should only be called from commands, or some reimplemented handle-event methods
+;; The next two functions rely on the context of *last-message*. They should only
+;; be called from a implementation of handle-event or a command.
 
 (defgeneric reply (texts &optional to-user-p)
   (:documentation "can be used by plugins to let the bot say something. message can be a list of strings or a string.
@@ -125,10 +104,6 @@ If to-user-p is t, address the user of the last received message directly"))
 
 (defgeneric action (texts)
   (:documentation "can be used by plugins write a /me message"))
-
-;; TODO: implement some sort of translation system
-(defun l10n (string)
-  string)
 
  ;;;;;;;;;;;;;;;;;
 ;;               ;;
@@ -146,9 +121,6 @@ If to-user-p is t, address the user of the last received message directly"))
     :reader bot
     :initarg :bot))
   (:documentation "all plugins must derive from this class"))
-
-(defgeneric connected (plugin)
-  (:documentation "called when the bot is connected and the channel is joined"))
 
 (defgeneric handle-event (plugin event)
   (:documentation "plugins can implement this for the various events"))
@@ -206,14 +178,6 @@ keyword parameters."
 (defun not-self-p (user bot)
   (not (string= (nick bot) (nick user))))
 
- ;;;;;;;;;;;;;;;;;;;;;
-;;                   ;;
-;; Utility functions ;;
-;;                   ;;
- ;;;;;;;;;;;;;;;;;;;;;
-
-(defun divisible (x y) (= (mod x y) 0))
-
  ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;                         ;;
 ;; Internal implementation ;;
@@ -230,6 +194,21 @@ keyword parameters."
 	 (setf (cdr cons) hook)
 	 (push (cons ',name hook) *hooks*))))
 
+(defhook irc:irc-rpl_luserme-message (bot message)
+  (declare (ignore message))
+  (dolist (chan (channels bot))
+   (irc:join (slot-value bot 'connection) chan)))
+
+(defhook irc:irc-privmsg-message (bot irc-message)
+  (let ((message (make-event irc-message bot)))
+    (handle-priv-message message)))
+
+(defhook irc:irc-join-message (bot irc-message)
+  (let ((*last-message* (make-event irc-message bot)))
+    (when (not (string= (nick bot) (nick (user *last-message*))))
+     (dolist (p (plugins bot))
+       (handle-event p *last-message*)))))
+
 (defun handle-errors-in-plugin (err plugin message)
   (declare (ignore plugin message))
   (reply (format nil "error: ~a~%" err)))
@@ -243,7 +222,6 @@ keyword parameters."
   (let ((in-quotes nil)
 	(escaped nil))
     (lambda (x)
-      (format t "~:c ~@[in-quotes~]~%" x in-quotes)
       (cond
 	(escaped (setf escaped nil))
 	((char= x #\\) (setf escaped t) nil)
@@ -255,7 +233,9 @@ keyword parameters."
 
 (defun split-string (string)
   (print string)
-  (let ((list (partition:split-sequence-if (string-splitter) string :remove-empty-subseqs t)))
+  (let ((list (partition:split-sequence-if (string-splitter)
+					   string
+					   :remove-empty-subseqs t)))
     (print list)
     list))
 
@@ -276,19 +256,6 @@ keyword parameters."
   (dolist (p (plugins (bot event)))
     (handle-event p event)))
 
- ;;;;;;;;;;;;;;;;;;;
-;;                 ;;
-;; Internal Hooks  ;;
-;;                 ;;
- ;;;;;;;;;;;;;;;;;;;
-
-(defhook irc:irc-rpl_luserme-message (bot message)
-  (declare (ignore message))
-  (dolist (chan (channels bot))
-   (irc:join (slot-value bot 'connection) chan))
-  (dolist (plugin (plugins bot))
-    (connected plugin)))
-
 (defun handle-priv-message (message)
   (with-slots (bot text sender) message
     (when (not-self-p sender bot) ;; never respond to myself!!
@@ -303,64 +270,48 @@ keyword parameters."
 	      (call-commands message)))
 	  (call-commands message)))))
 
-(defhook irc:irc-privmsg-message (bot irc-message)
-  (let ((message (make-event irc-message bot)))
-    (handle-priv-message message)))
-
-(defhook irc:irc-join-message (bot irc-message)
-  (let ((*last-message* (make-event irc-message bot)))
-    (when (not (string= (nick bot) (nick (user *last-message*))))
-     (dolist (p (plugins bot))
-       (handle-event p *last-message*)))))
-
  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;                              ;;
 ;; Implementations of generics  ;;
 ;;                              ;;
  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defmacro if-bind ((var expr) (&body true-form*) &optional false-form)
-  (with-gensyms (variable)
-    `(let ((,variable ,expr))
-       (if ,variable
-	   (let ((,var ,variable))
-	     ,@true-form*)
-	   ,false-form))))
+(defparameter *default-irc-port* 6667)
 
-(defmacro when-bind ((var expr) &body body)
-  `(let ((,var ,expr))
-     (when ,var
-       ,@body)))
+(defmethod start ((bot bot) server &optional (port *default-irc-port*))
+  (if-let (conn (irc:connect
+		 :server server
+		 :port port
+		 :nickname (nick bot)
+		 :logging-stream *debug*))
+    (progn
+      (setf (slot-value bot 'connection) conn)
+      (dolist (hook *hooks*)
+	(irc:add-hook conn
+		      (car hook)
+		      (lambda (message)
+			(funcall (cdr hook) bot message)))) 
+      (unwind-protect
+	   (irc:read-message-loop (connection bot))
+	(let ((connection (connection bot)))
+	  (setf (slot-value bot 'connection) nil)
+	  (irc:quit connection "the lispbot: http://gitorious.org/lispbot"))))
+    (error "could not connect to server")))
 
-(defmethod connect ((bot bot) server &optional (port 6667))
-  (if-bind (conn (irc:connect :server server :port port :nickname (nick bot) :logging-stream t))
-	   ((setf (slot-value bot 'connection) conn)
-	    (dolist (hook *hooks*)
-	      (irc:add-hook conn (car hook) (lambda (message) (apply (cdr hook) (list bot message))))))
-	   (error "could not connect to server")))
-
-(defmethod read-loop ((bot bot)) 
-  (irc:read-message-loop (slot-value bot 'connection)))
-
-
-;; TODO do some more cleanup
-(defmethod disconnect ((bot bot))
-  (with-slots (connection) bot
-   (irc:quit connection "god wrote in lisp code")
-   (setf connection nil)))
-
-(defmethod connected ((plugin plugin)) nil)
-(defmethod handle-event ((plugin plugin) (event event)) nil)
-
-(defmethod send (lines to (bot bot))
+(defmethod send (lines to (bot bot) &key actionp)
   (let ((connection (connection bot))
-	(to (if (userp to) (nick to) to)))
-   (loop for msg in (ensure-list lines)
+	(to (if (userp to) (nick to) to))
+	(lines (if actionp
+		   (actionize-lines lines)
+		   (ensure-list lines))))
+   (loop for msg in lines
       for i from 1
       do (progn
 	   (irc:privmsg connection to msg)
-	   (when (divisible i 3)
+	   (when (= (mod i 3) 0)
 	     (sleep 1))))))
+
+(defmethod handle-event ((plugin plugin) (event event)) nil)
 
 (defgeneric reply-to-event (message lines &optional to-user-p))
 
@@ -386,19 +337,20 @@ keyword parameters."
 	(channel event) (bot event)))
 
 (defmethod reply-to-event ((event (eql nil)) lines &optional to-user-p)
-  (declare (ignore event))
-  (declare (ignore lines))
-  (declare (ignore to-user-p)))
+  (declare (ignore event lines to-user-p)))
 
 (defmethod reply (lines &optional to-user-p)
   (reply-to-event *last-message* lines to-user-p))
 
+(defparameter *ctcp-delimiter* (code-char 1))
+
+(defun actionize-lines (lines)
+  (mapcar (lambda (x)
+	    (format nil "~aACTION ~a~@*~a~*" *ctcp-delimiter* x))
+	  (ensure-list lines)))
+
 (defmethod action (lines)
-  (let ((delimiter (code-char 1))) ;; CTCP delimiter for ACTION is ascii 0x1
-   (reply-to-event *last-message*
-		   (mapcar (lambda (x)
-			     (format nil "~aACTION ~a~a" delimiter x delimiter))
-			   (ensure-list lines)))))
+  (reply-to-event *last-message* (actionize-lines lines)))
 
 (defmethod help ((plugin plugin))
   (declare (ignore plugin))
@@ -419,4 +371,8 @@ keyword parameters."
 
 (defmethod print-object ((object bot) s)
   (print-unreadable-object (object s :type t)
-    (format s "~a" (nick object))))
+    (princ (nick object) s)))
+
+(defmethod print-object ((object plugin) s)
+  (print-unreadable-object (object s :type t)
+    (princ (name object) s)))
