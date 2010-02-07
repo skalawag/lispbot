@@ -1,12 +1,14 @@
 (defpackage :lispbot
-  (:use :cl)
+  (:use :cl :alexandria)
   (:nicknames :bot)
-  (:export :bot
+  (:export :*default-data-directory*
+	   :bot
 	   :make-bot
 	   :add-plugins
 	   :plugins
 	   :channels
 	   :nick
+	   :data-dir
 
 	   :connect
 	   :disconnect
@@ -22,8 +24,6 @@
 	   :connected
 	   :handle-event
 	   :*last-message*
-
-	   :random-entry
 
 	   :event
 	   :message

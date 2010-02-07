@@ -13,4 +13,5 @@
 	       (:file "package"))
   :depends-on (:cl-irc
 	       :cl-ppcre
-	       :split-sequence))
+	       :split-sequence
+	       :alexandria))

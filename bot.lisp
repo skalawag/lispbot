@@ -14,6 +14,16 @@
 
 (in-package :lispbot)
 
+ ;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;                         ;;
+;; Configuration variables ;;
+;;                         ;;
+ ;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defvar *default-data-directory*
+  (merge-pathnames ".lispbot/" (user-homedir-pathname))
+  "the default place where the bot and plugins will create their files")
+
  ;;;;;;;;;;;;;;
 ;;            ;;
 ;; Bot Class  ;;
@@ -40,7 +50,12 @@
     :initform "lispbot"
     :initarg :nick
     :reader nick
-    :documentation "the nickname of the bot"))
+    :documentation "the nickname of the bot")
+   (data-dir
+    :initform *default-data-directory*
+    :initarg :data-dir
+    :accessor data-dir
+    :documentation "the direectory where the bot and plugins will store there files"))
   (:documentation "a irc bot"))
 
 ;; TODO: implement (suggestion: implement as (setf (channels bot)))
@@ -63,13 +78,13 @@ derived from PLUGIN or lists of those including lists of lists of ..."
 	     (loop for p in plugins appending
 		  (cond
 		    ((listp p) (make-plugins p bot))
-		    ((symbolp p) (mklist (make-instance p :bot bot)))
+		    ((symbolp p) (ensure-list (make-instance p :bot bot)))
 		    ((subtypep (type-of p) 'plugin) (progn
 						      (setf (slot-value p 'bot) bot)
-						      (mklist p)))
+						      (ensure-list p)))
 		    (t (error "strange plugin: ~a" p))))))
     (let ((bot (make-instance 'bot
-			      :channels (mklist channels)
+			      :channels (ensure-list channels)
 			      :nick nick)))
       (setf (slot-value bot 'plugins) (make-plugins plugins bot))
       bot)))
@@ -141,9 +156,9 @@ If to-user-p is t, address the user of the last received message directly"))
 (defgeneric help (plugin)
   (:documentation "called when the user requests help for a plugin"))
 
-(defmacro with-gensyms ((&rest syms) &body body)
-  `(let ,(mapcar (lambda (x) `(,x (gensym))) syms)
-     ,@body))
+(defparameter *last-message* nil
+  "this is bound to the last message addressing the bot during the exectution of commands
+or the 'message' method of plugins")
 
 (defmacro defcommand (name ((plvar plclass) &rest args) &body body)
   "define a new command for the plugin PLCLASS. NAME can be a string, or
@@ -188,20 +203,16 @@ keyword parameters."
 (defun userp (object)
   (eq (type-of object) 'user))
 
+(defun not-self-p (user bot)
+  (not (string= (nick bot) (nick user))))
+
  ;;;;;;;;;;;;;;;;;;;;;
 ;;                   ;;
 ;; Utility functions ;;
 ;;                   ;;
  ;;;;;;;;;;;;;;;;;;;;;
 
-(defun random-entry (list)
-  "return a randomly selected element from list"
-  (nth (random (length list)) list))
-
 (defun divisible (x y) (= (mod x y) 0))
-
-(defun mklist (arg)
-  (if (listp arg) arg (list arg)))
 
  ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;                         ;;
@@ -219,33 +230,51 @@ keyword parameters."
 	 (setf (cdr cons) hook)
 	 (push (cons ',name hook) *hooks*))))
 
-(defparameter *last-message* nil
-  "this is bound to the last message addressing the bot during the exectution of commands
-or the 'message' method of plugins")
-
-;; FIXME: do something resonable here
 (defun handle-errors-in-plugin (err plugin message)
   (declare (ignore plugin message))
-  (format t "error: ~a~%" err))
+  (reply (format nil "error: ~a~%" err)))
 
-(defun call-plugin-callbacks (message)
+(defun command-regex (cmd)
+  (format nil "^~a( (.*))?" (if (symbolp cmd)
+				   (string-downcase (symbol-name cmd))
+				   cmd)))
+
+(defun string-splitter ()
+  (let ((in-quotes nil)
+	(escaped nil))
+    (lambda (x)
+      (format t "~:c ~@[in-quotes~]~%" x in-quotes)
+      (cond
+	(escaped (setf escaped nil))
+	((char= x #\\) (setf escaped t) nil)
+	((char= x #\") (setf in-quotes (not in-quotes)) t)
+	((and (char= x #\Space)
+	      (not in-quotes))
+	 t)
+	(t nil)))))
+
+(defun split-string (string)
+  (print string)
+  (let ((list (partition:split-sequence-if (string-splitter) string :remove-empty-subseqs t)))
+    (print list)
+    list))
+
+(defun call-commands (message)
   (dolist (plugin (plugins (bot message)))
-    (let ((*last-message* message) (type (type-of message)))
-      (when (or (eq type 'channel-message) (eq type 'query-message))
-	(dolist (command (get (class-name (class-of plugin)) :commands))
-	  (let ((name (car command)) (function (cdr command)))
-	    (multiple-value-bind (match msg)
-		(ppcre:scan-to-strings (format nil "^~a(\\W+(.*))?" (if (symbolp name)
-									(string-downcase (symbol-name name))
-									name))
-				       (text message))
-	      (when match
-		(handler-case
-		    ;; TODO: implement our own 'Argument String' -> 'Lambda list' function that handles quotes
-		    ;;       and keyword parameters
-		    (apply function plugin (partition:split-sequence #\Space (elt msg 1) :remove-empty-subseqs t))
-		  (error (err) (handle-errors-in-plugin err plugin message))))))))
-      (handle-event plugin *last-message*))))
+    (let ((*last-message* message))
+      (dolist (command (get (class-name (class-of plugin)) :commands))
+	(destructuring-bind (name . function) command
+	  (multiple-value-bind (match msg)
+	      (ppcre:scan-to-strings (command-regex name) (text message))
+	    (when match
+	      (handler-case
+		  (apply function plugin (split-string (elt msg 1)))
+		(condition (err)
+		  (handle-errors-in-plugin err plugin message))))))))))
+
+(defun call-event-handlers (event)
+  (dolist (p (plugins (bot event)))
+    (handle-event p event)))
 
  ;;;;;;;;;;;;;;;;;;;
 ;;                 ;;
@@ -261,17 +290,18 @@ or the 'message' method of plugins")
     (connected plugin)))
 
 (defun handle-priv-message (message)
-  (with-slots (bot text) message
-    (case (type-of message)
-      (channel-message
-       (multiple-value-bind (match msg)
-	   (ppcre:scan-to-strings (concatenate 'string "^(" (nick bot) "\\W+|!)(.*)") text)
-	 (when match
-	   (setf (original-text message) text)
-	   (setf text (elt msg 1))
-	   (call-plugin-callbacks message))))
-      (query-message
-       (call-plugin-callbacks message)))))
+  (with-slots (bot text sender) message
+    (when (not-self-p sender bot) ;; never respond to myself!!
+      (let ((*last-message* message))
+       (call-event-handlers message))
+      (if (typep message 'channel-message)
+	  (multiple-value-bind (match msg)
+	      (ppcre:scan-to-strings (concatenate 'string "^(" (nick bot) "\\W+|!)(.*)") text)
+	    (when match
+	      (setf (original-text message) text)
+	      (setf text (elt msg 1))
+	      (call-commands message)))
+	  (call-commands message)))))
 
 (defhook irc:irc-privmsg-message (bot irc-message)
   (let ((message (make-event irc-message bot)))
@@ -325,7 +355,7 @@ or the 'message' method of plugins")
 (defmethod send (lines to (bot bot))
   (let ((connection (connection bot))
 	(to (if (userp to) (nick to) to)))
-   (loop for msg in (mklist lines)
+   (loop for msg in (ensure-list lines)
       for i from 1
       do (progn
 	   (irc:privmsg connection to msg)
@@ -337,7 +367,7 @@ or the 'message' method of plugins")
 (defun address-user (lines nick)
   (mapcar (lambda (x)
 	    (format nil "~a: ~a" nick x))
-	  (mklist lines)))
+	  (ensure-list lines)))
 
 (defmethod reply-to-event ((message channel-message) lines &optional to-user-p)
   (send (if to-user-p
@@ -368,7 +398,7 @@ or the 'message' method of plugins")
    (reply-to-event *last-message*
 		   (mapcar (lambda (x)
 			     (format nil "~aACTION ~a~a" delimiter x delimiter))
-			   (mklist lines)))))
+			   (ensure-list lines)))))
 
 (defmethod help ((plugin plugin))
   (declare (ignore plugin))
