@@ -49,6 +49,7 @@ Lispbot depends on the following external libraries:
 @item cl-ppcre (http://weitz.de/cl-ppcre)
 @item cl-irc (http://common-lisp.net/project/cl-irc)
 @item split-sequence (http://www.cliki.net/SPLIT-SEQUENCE)
+@item alexandria (http://common-lisp.net/project/alexandria/)
 @end itemize
 
 Please note that currently there seems to be some incompatibility between

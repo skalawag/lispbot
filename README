@@ -1,67 +1,41 @@
+README
+******
 
-HOW TO USE THE LISPBOT
-======================
+1 Basic Usage
+*************
 
-Install and load it as described in INSTALL.
+Here is a brief description of a few quick steps to get the Lispbot up
+and running.
+
+Firstly you have to install and/or load the bot. See INSTALL, for
+details.
 
 Then you have to create a bot instance. This is done by:
 
-        (make-bot "nick" "#mychannel" plugin1 plugin2...)
+     (make-bot "nick" "#mychannel" plugin1 plugin2...)
 
-The second argument can also be a list of channels. The bot will join them all.
+The second argument can also be a list of channels. The bot will join
+them all.
 
-The plugins can be either the classname of a plugin (e.g.
-'bot-plugins:help-plugin), an instance of a plugin or a list of any of those.
+The plugins can either be the classname of a plugin (e.g.
+'bot-plugins:help-plugin), an instance of a plugin or a list of any of
+those.
 
 For example:
 
-        (bot:make-bot "lispbot" '("#chan1" "#chan2")
-                      'bot.plugins:help-plugin
-                      'bot.plugins:dice-plugin
-                      (make-instance 'bot.plugins:greet-plugin
-                                     :greet-new-users t))
-
-
+     (bot:make-bot "lispbot" '("#chan1" "#chan2")
+                   'bot.plugins:help-plugin
+                   'bot.plugins:dice-plugin
+                   (make-instance 'bot.plugins:greet-plugin
+                                  :greet-new-users t))
 
 To let the bot connect to a server and start, type:
 
-        (bot:connect bot "example.com")
-        (bot:read-loop bot)
+     (bot:connect bot "example.com")
+     (bot:read-loop bot)
 
-You can stop the bot by interrupting the read-loop (typically <C-c>) and type:
+You can stop the bot by interrupting the read-loop (typically `C-c')
+and type:
 
-        (bot:disconnect bot)
-
-
-
-
-WRITING PLUGINS
-===============
-
-Writing plugins is simple. You just create a subclass of the plugins class.
-
-        (defclass myplugin (plugin) ())
-
-To let the plugins react to certain events, you have two options.
-The simpler one is to define a command for your plugin:
-
-        (defcommand say-hello ((p myplugin) to-whom)
-          (reply (format nil "Hello ~a" to-whom)))
-
-This command will be invoked if someone says something like "!say-hello Bob" in
-a channel or a query. The bot would then respond with "Hello Bob".
-
-The second option is to define a method HANDLE-EVENT for your plugin
-
-        (defmethod handle-event ((p myplugin) (m query-message))
-          (reply "You said something"))
-
-The first parameter specializes on your plugin class and the second on one of
-the classes defined in "events.lisp".
-
-In both cases you can communicate via REPLY, ACTION or the more generic SEND
-function.
-
-For more infos, see the documentation of the functions in "bot.lisp" or
-"events.lisp".
+     (bot:disconnect bot)
 
