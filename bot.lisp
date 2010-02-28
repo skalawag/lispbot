@@ -36,8 +36,8 @@
 (defclass bot ()
   ((connection
     :initform nil
-    :type irc:connection
     :reader connection
+    :type (or 'null 'irc:connection)
     :documentation "internal connection representation")
    (channels        ;; list of strings. TODO: add channel class, that for example keeps track of users
     :initform nil
@@ -92,15 +92,15 @@ derived from PLUGIN or lists of those including lists of lists of ..."
   (:documentation "disconnect from server"))
 
 (defgeneric send (lines to bot &key actionp)
-  (:documentation "send a privmsg to TO (which can be a chan or a user).
+  (:documentation "send a privmsg to `to' (which can be a chan or a user).
 If `actionp' is true, use the ctcp action command"))
 
 ;; The next two functions rely on the context of *last-message*. They should only
-;; be called from a implementation of handle-event or a command.
+;; be called from an implementation of handle-event or a command.
 
 (defgeneric reply (texts &optional to-user-p)
-  (:documentation "can be used by plugins to let the bot say something. message can be a list of strings or a string.
-If to-user-p is t, address the user of the last received message directly"))
+  (:documentation "can be used by plugins to let the bot say something. `texts' can be a list of strings or a string.
+If `to-user-p' is t, address the user of the last received message directly"))
 
 (defgeneric action (texts)
   (:documentation "can be used by plugins write a /me message"))
@@ -129,16 +129,14 @@ If to-user-p is t, address the user of the last received message directly"))
   (:documentation "called when the user requests help for a plugin"))
 
 (defparameter *last-message* nil
-  "this is bound to the last message addressing the bot during the exectution of commands
-or the 'message' method of plugins")
+  "this is bound to the last message to the bot during the exectution of commands
+or the `handle-event' method of plugins")
 
 (defmacro defcommand (name ((plvar plclass) &rest args) &body body)
-  "define a new command for the plugin PLCLASS. NAME can be a string, or
-a symbol (in witch case the command will be the lowercase symbolname. All
-other parameters ARGS are matched against the command arguments to the
-command, that was issued in a channel or a query. Note that this currently
-has some limitations, such as not supporting multi-word arguments, or
-keyword parameters."
+  "define a new command for the plugin `plclass'. `Name' can be a string, or
+a symbol (in witch case the command will be the lowercase symbolname). All
+other parameters `args' are matched against the arguments to the
+command, that was issued in a channel or a query."
   (with-gensyms (command closure)
    `(let ((,command (assoc ',name (get ',plclass :commands)))
 	  (,closure (lambda (,plvar ,@args) ,@body)))
@@ -232,11 +230,9 @@ keyword parameters."
 	(t nil)))))
 
 (defun split-string (string)
-  (print string)
   (let ((list (partition:split-sequence-if (string-splitter)
 					   string
 					   :remove-empty-subseqs t)))
-    (print list)
     list))
 
 (defun call-commands (message)
