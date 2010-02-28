@@ -25,7 +25,7 @@ for details.
 Then you have to create a bot instance. This is done by:
 
 @example
-(make-bot "nick" "#mychannel" plugin1 plugin2...)
+(make-bot "nick" "#mychannel" :plugins '(plugin1 plugin2...))
 @end example
 
 The second argument can also be a list of channels. The bot will join them all.
@@ -37,22 +37,18 @@ For example:
 
 @example
 (bot:make-bot "lispbot" '("#chan1" "#chan2")
-              'bot.plugins:help-plugin
-              'bot.plugins:dice-plugin
-              (make-instance 'bot.plugins:greet-plugin
-                             :greet-new-users t))
+              :plugins (list 'bot.plugins:help-plugin
+                             'bot.plugins:dice-plugin
+                             (make-instance 'bot.plugins:greet-plugin
+                                            :greet-new-users t))
 @end example
 
 
 To let the bot connect to a server and start, type:
 
 @example
-(bot:connect bot "example.com")
-(bot:read-loop bot)
+(bot:start bot "example.com")
 @end example
 
-You can stop the bot by interrupting the read-loop (typically @kbd{C-c}) and type:
-
-@example
-(bot:disconnect bot)
-@end example
+You can stop the bot by interrupting the read-loop (typically
+@kbd{C-c}). It will automatically disconnect from the server.

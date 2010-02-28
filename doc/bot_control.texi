@@ -33,7 +33,7 @@ bot-instance and give it the necessary options and flags.
 
 The basic function for doing this is:
 
-@deffn Function make-bot nick channel plug-ins @dots{}
+@deffn Function make-bot nick channel &key plugins datadir
 Create a bot instance.
 
 @var{nick} is the nickname which the bot tries to use when it connects
@@ -42,9 +42,13 @@ to a IRC-server.
 The @var{channel} argument is either a single string with a channel name or a
 list of such strings. In this case, the bot will join them all.
 
-The @var{plug-ins} arguments can be either the class of a plug-in
-(e.g. @code{bot-plugins:help-plugin}), an instance of a plug-in or a
-list of any of those.
+The @var{plugins} argument is a list where each element can be either
+the class of a plugin (e.g. @code{bot-plugins:help-plugin}), an
+instance of a plug-in or a list of any of those.
+
+@var{datadir} is a way to override the
+@code{*default-data-directory*}. This is the root directory where the
+bot and it's plugins will save their data.
 
 This means that you can create a list of configured plugin instances
 beforehand so that you don't have to specify them every time when you
@@ -54,10 +58,10 @@ Example usage:
 
 @example
 (bot:make-bot "lispbot" '("#chan1" "#chan2")
-              'bot.plugins:help-plugin
-              'bot.plugins:dice-plugin
-              (make-instance 'bot.plugins:greet-plugin
-                             :greet-new-users t))
+              :plugins `(bot.plugins:help-plugin
+                         bot.plugins:dice-plugin
+                         ,(make-instance 'bot.plugins:greet-plugin
+                                         :greet-new-users t)))
 @end example
 
 Typically (for interactive use) you will save the returned bot instance
@@ -67,15 +71,12 @@ in a global variable to be able to refer to it later.
 @node Running
 @section Running
 
-Currently, running the bot consists of two steps. First you have to
-connect the bot with an IRC-server. Then you have to let the bot
-enter a read-loop from where it doesn't return until it gets
-disconnected.
+Currently there is no support for threading and thus the folllowing
+command will block your REPL. This will change in the future.
 
-We are aware that this is no ideal situation. Once support for threads
-is added to the bot, this will be much easier.
+@deffn Function start bot server &optional port
 
-@deffn Function connect bot server [port]
+Let the @var{bot} connect to the IRC-server @var{server}.
 
 @end deffn
 
