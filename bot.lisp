@@ -37,7 +37,7 @@
   ((connection
     :initform nil
     :reader connection
-    :type (or 'null 'irc:connection)
+    :type (or null irc:connection)
     :documentation "internal connection representation")
    (channels        ;; list of strings. TODO: add channel class, that for example keeps track of users
     :initform nil
