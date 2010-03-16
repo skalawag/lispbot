@@ -307,7 +307,9 @@ command, that was issued in a channel or a query."
 	   (when (= (mod i 3) 0)
 	     (sleep 1))))))
 
-(defmethod handle-event ((plugin plugin) (event event)) nil)
+(defmethod handle-event ((plugin plugin) (event event))
+  (declare (ignore plugin event))
+  nil)
 
 (defgeneric reply-to-event (message lines &optional to-user-p))
 
