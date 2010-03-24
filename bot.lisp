@@ -55,6 +55,12 @@
     :reader nick
     :type string
     :documentation "the nickname of the bot")
+   (quit-message
+    :initform "The Lispbot: gitorious.org/lispbot"
+    :initarg :quit-message
+    :accessor quit-message
+    :type string
+    :documentation "A short message to say goodbye")
    (data-dir
     :initform *default-data-directory*
     :initarg :data-dir
@@ -62,16 +68,17 @@
     :documentation "the directory where the bot and plugins will store there files"))
   (:documentation "a irc bot"))
 
-(defun make-bot (nick channels &key plugins data-dir)
+(defun make-bot (nick channels &rest keywords &key plugins data-dir quit-message)
   "return a new bot with the nickname NICK witch joins the channels CHANNELS.
 plugins can be instances of classes derived from PLUGIN, names of classes
 derived from PLUGIN or lists of those including lists of lists of ..."
-  (let ((bot (make-instance 'bot
-			    :channels (ensure-list channels)
-			    :nick nick)))
-    (add-plugins bot plugins)
-    (when data-dir (setf (data-dir bot) data-dir))
-    bot))
+  (declare (ignore plugins data-dir quit-message))
+  (apply #'make-instance 'bot
+	 :channels (ensure-list channels)
+	 :nick nick
+	 keywords))
+
+
 
 
 (defgeneric start (bot server &optional port)
@@ -290,13 +297,21 @@ command, that was issued in a channel or a query."
 	(irc:add-hook conn
 		      (car hook)
 		      (lambda (message)
-			(funcall (cdr hook) bot message)))) 
+			(funcall (cdr hook) bot message))))
       (unwind-protect
 	   (irc:read-message-loop (connection bot))
 	(let ((connection (connection bot)))
-	  (setf (slot-value bot 'connection) nil)
-	  (irc:quit connection "the lispbot: http://gitorious.org/lispbot"))))
+	  (unless (null (connection bot)) ;; stop was called on this bot.
+	    (setf (slot-value bot 'connection) nil)
+	    (irc:quit connection (quit-message bot))))))
     (error "could not connect to server")))
+
+(defmethod stop ((bot bot))
+  (if-let (con (connection bot))
+    (progn
+      (setf (slot-value bot 'connection) nil)
+      (irc:quit con (quit-message bot)))
+    (error "The bot was not started.")))
 
 (defmethod send (lines to (bot bot) &key actionp)
   (let ((connection (connection bot))
@@ -370,6 +385,10 @@ command, that was issued in a channel or a query."
 	  (nick user)
 	  (name user)
 	  (host user)))
+
+(defmethod initialize-instance :after ((bot bot) &rest parameters)
+  (declare (ignore parameters))
+  (setf (plugins bot) (apply #'add-plugins bot (plugins bot))))
 
 (defmethod print-object ((object bot) s)
   (print-unreadable-object (object s :type t)
