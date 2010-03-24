@@ -1,7 +1,7 @@
  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; __                               ____            __             ;;
 ;;/\ \       __                    /\  _`\         /\ \__          ;;
-;;\ \ \     /\_\    ____  _____    \ \ \L\ \    ___\ \ ,_\         ;; 
+;;\ \ \     /\_\    ____  _____    \ \ \L\ \    ___\ \ ,_\         ;;
 ;; \ \ \  __\/\ \  /',__\/\ '__`\   \ \  _ <'  / __`\ \ \/         ;;
 ;;  \ \ \L\ \\ \ \/\__, `\ \ \L\ \   \ \ \L\ \/\ \L\ \ \ \_        ;;
 ;;   \ \____/ \ \_\/\____/\ \ ,__/    \ \____/\ \____/\ \__\       ;;
@@ -53,12 +53,13 @@
     :initform "lispbot"
     :initarg :nick
     :reader nick
+    :type string
     :documentation "the nickname of the bot")
    (data-dir
     :initform *default-data-directory*
     :initarg :data-dir
     :accessor data-dir
-    :documentation "the direectory where the bot and plugins will store there files"))
+    :documentation "the directory where the bot and plugins will store there files"))
   (:documentation "a irc bot"))
 
 (defun make-bot (nick channels &key plugins data-dir)
@@ -72,18 +73,6 @@ derived from PLUGIN or lists of those including lists of lists of ..."
     (when data-dir (setf (data-dir bot) data-dir))
     bot))
 
-(defun add-plugins (bot &rest plugins)
-  "add plugins plugins to the bots plugin-list"
-  (labels ((make-plugins (plugins bot)
-	     (loop for p in plugins appending
-		  (cond
-		    ((listp p) (make-plugins p bot))
-		    ((symbolp p) (ensure-list (make-instance p :bot bot)))
-		    ((subtypep (type-of p) 'plugin) (progn
-						      (setf (slot-value p 'bot) bot)
-						      (ensure-list p)))
-		    (t (error "strange plugin: ~a" p))))))
-    (setf (plugins bot) (make-plugins plugins bot))))
 
 (defgeneric start (bot server &optional port)
   (:documentation "connect to server and enter read loop"))
@@ -110,6 +99,8 @@ If `to-user-p' is t, address the user of the last received message directly"))
 ;; Plugin Class  ;;
 ;;               ;;
  ;;;;;;;;;;;;;;;;;
+
+;; TODO: Make a special meta class for plugins.
 
 (defclass plugin ()
   ((name
@@ -181,6 +172,19 @@ command, that was issued in a channel or a query."
 ;; Internal implementation ;;
 ;;                         ;;
  ;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun add-plugins (bot &rest plugins)
+  "add plugins plugins to the bots plugin-list"
+  (labels ((make-plugins (plugins bot)
+	     (loop for p in plugins appending
+		  (cond
+		    ((listp p) (make-plugins p bot))
+		    ((symbolp p) (ensure-list (make-instance p :bot bot)))
+		    ((subtypep (type-of p) 'plugin) (progn
+						      (setf (slot-value p 'bot) bot)
+						      (ensure-list p)))
+		    (t (error "strange plugin: ~a" p))))))
+    (setf (plugins bot) (make-plugins plugins bot))))
 
 (defparameter *hooks* nil)
 
