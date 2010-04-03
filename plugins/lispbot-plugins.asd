@@ -15,5 +15,7 @@
 		      :depends-on ("package"))
 	       (:file "rememerber-plugin"
 		      :depends-on ("package"))
+		   (:file "poll-plugin"
+			  :depends-on ("package"))
 	       (:file "package"))
   :depends-on (:lispbot :alexandria))
