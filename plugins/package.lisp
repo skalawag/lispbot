@@ -6,11 +6,26 @@
 	   :help-plugin
 	   :dice-plugin
 	   :decide-plugin
-	   
+	   :poll-plugin
+
+           ;; remember plugin specific
 	   :remember-plugin
 	   :remembered-things
 	   :file
 	   :save-remembered
-	   :load-remembered)
+	   :load-remembered
+
+           ;; poll plugin
+           :track-users-p
+           :polls
+	   :save-polls
+	   :load-polls
+           :add-poll
+           :delete-poll
+           :poll
+           :poll-name
+           :poll-description
+           :poll-options
+           :poll-users)
   (:documentation "Some (not so) usefull plugins for the lispbot. These are the
 plugins that come with the main distribution. More plugins may be found elsewhere"))
