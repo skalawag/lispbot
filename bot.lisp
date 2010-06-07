@@ -83,7 +83,7 @@ derived from PLUGIN or lists of those including lists of lists of ..."
 						      (setf (slot-value p 'bot) bot)
 						      (ensure-list p)))
 		    (t (error "strange plugin: ~a" p))))))
-    (setf (plugins bot) (make-plugins plugins bot))))
+    (appendf (plugins bot) (make-plugins plugins bot))))
 
 (defgeneric start (bot server &optional port)
   (:documentation "connect to server and enter read loop"))
@@ -212,7 +212,7 @@ command, that was issued in a channel or a query."
   (reply (format nil "error: ~a~%" err)))
 
 (defun command-regex (cmd)
-  (format nil "^~a( (.*))?" (if (symbolp cmd)
+  (format nil "^~a( (.*))?$" (if (symbolp cmd)
 				   (string-downcase (symbol-name cmd))
 				   cmd)))
 
@@ -244,7 +244,7 @@ command, that was issued in a channel or a query."
 	      (ppcre:scan-to-strings (command-regex name) (text message))
 	    (when match
 	      (handler-case
-		  (apply function plugin (split-string (elt msg 1)))
+                  (apply function plugin (split-string (elt msg 1)))
 		(condition (err)
 		  (handle-errors-in-plugin err plugin message))))))))))
 

@@ -38,5 +38,6 @@
 	   :part-event
 
 	   :user
+           :host
 	   :user-equal
 	   :hostmask))
