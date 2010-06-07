@@ -46,7 +46,6 @@
     :documentation "list of channels the bot has joined")
    (plugins
     :initform nil
-    :initarg :plugins
     :accessor plugins
     :documentation "list of plugins for this bot")
    (nick
@@ -383,9 +382,8 @@ command, that was issued in a channel or a query."
 	  (name user)
 	  (host user)))
 
-(defmethod initialize-instance :after ((bot bot) &rest parameters)
-  (declare (ignore parameters))
-  (setf (plugins bot) (apply #'add-plugins bot (plugins bot))))
+(defmethod initialize-instance :after ((bot bot) &key plugins)
+  (apply #'add-plugins bot plugins))
 
 (defmethod print-object ((object bot) s)
   (print-unreadable-object (object s :type t)
