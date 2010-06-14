@@ -41,7 +41,6 @@
     :documentation "internal connection representation")
    (channels        ;; list of strings. TODO: add channel class, that for example keeps track of users
     :initform nil
-    :initarg :channels
     :reader channels
     :documentation "list of channels the bot has joined")
    (plugins
@@ -64,31 +63,30 @@
     :initform *default-data-directory*
     :initarg :data-dir
     :accessor data-dir
-    :documentation "the directory where the bot and plugins will store there files"))
+    :documentation "the directory where the bot and plugins will store there files")
+   (bot-lock
+    :initform (bt:make-recursive-lock "global bot lock")
+    :accessor bot-lock
+    :documentation "The big bot write lock")
+   (message-channel
+    :initform (make-instance 'chanl:unbounded-channel)
+    :accessor message-channel
+    :documentation "Messages received from the network but not processed yet")
+   (control-thread
+    :accessor control-thread)
+   (read-thread
+    :accessor read-thread))
   (:documentation "a irc bot"))
 
-(defun make-bot (nick channels &rest keywords &key plugins data-dir quit-message)
-  "return a new bot with the nickname NICK witch joins the channels CHANNELS.
-plugins can be instances of classes derived from PLUGIN, names of classes
-derived from PLUGIN or lists of those including lists of lists of ..."
-  (declare (ignore plugins data-dir quit-message))
-  (apply #'make-instance 'bot
-	 :channels (ensure-list channels)
-	 :nick nick
-	 keywords))
-
-(defun add-plugins (bot &rest plugins)
-  "add plugins plugins to the bots plugin-list"
-  (labels ((make-plugins (plugins bot)
-	     (loop for p in plugins appending
-		  (cond
-		    ((listp p) (make-plugins p bot))
-		    ((symbolp p) (ensure-list (make-instance p :bot bot)))
-		    ((subtypep (type-of p) 'plugin) (progn
-						      (setf (slot-value p 'bot) bot)
-						      (ensure-list p)))
-		    (t (error "strange plugin: ~a" p))))))
-    (appendf (plugins bot) (make-plugins plugins bot))))
+;(defun make-bot (nick channels &rest keywords &key plugins data-dir quit-message)
+;  "return a new bot with the nickname NICK witch joins the channels CHANNELS.
+;plugins can be instances of classes derived from PLUGIN, names of classes
+;derived from PLUGIN or lists of those including lists of lists of ..."
+;  (declare (ignore plugins data-dir quit-message))
+;  (apply #'make-instance 'bot
+;	 :channels (ensure-list channels)
+;	 :nick nick
+;	 keywords))
 
 (defgeneric start (bot server &optional port)
   (:documentation "connect to server and enter read loop"))
@@ -99,6 +97,11 @@ derived from PLUGIN or lists of those including lists of lists of ..."
 (defgeneric send (lines to bot &key actionp)
   (:documentation "send a privmsg to `to' (which can be a chan or a user).
 If `actionp' is true, use the ctcp action command"))
+
+(defgeneric add-plugins (bot &rest plugins)
+  (:documentation "add `plugins' to the bot. Plugins can be instances of classes derived
+from PLUGIN, names of classes derived from PLUGIN or lists of those including lists of
+lists of ..."))
 
 ;; The next two functions rely on the context of *last-message*. They should only
 ;; be called from an implementation of handle-event or a command.
@@ -189,30 +192,25 @@ command, that was issued in a channel or a query."
 ;;                         ;;
  ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defparameter *hooks* nil)
+(defparameter *hooks*
+  '(irc:irc-rpl_luserme-message irc:irc-privmsg-message
+    irc:irc-join-message))
 
-(defmacro defhook (name (bot message) &body body)
-  `(let ((cons (assoc ',name *hooks*))
-	 (hook (lambda (,bot ,message)
-		  ,@body)))
-     (if cons
-	 (setf (cdr cons) hook)
-	 (push (cons ',name hook) *hooks*))))
+(defgeneric handle-irc-message (type bot message))
 
-(defhook irc:irc-rpl_luserme-message (bot message)
-  (declare (ignore message))
+(defmethod handle-irc-message ((type (eql 'irc:irc-rpl_luserme-message)) bot msg)
   (dolist (chan (channels bot))
-   (irc:join (slot-value bot 'connection) chan)))
+    (irc:join (connection bot) chan)))
 
-(defhook irc:irc-privmsg-message (bot irc-message)
-  (let ((message (make-event irc-message bot)))
+(defmethod handle-irc-message ((type (eql 'irc:irc-privmsg-message)) bot msg) 
+  (let ((message (make-event msg bot)))
     (handle-priv-message message)))
 
-(defhook irc:irc-join-message (bot irc-message)
-  (let ((*last-message* (make-event irc-message bot)))
+(defmethod handle-irc-message ((type (eql 'irc:irc-join-message)) bot msg)
+  (let ((*last-message* (make-event msg bot)))
     (when (not (string= (nick bot) (nick (user *last-message*))))
-     (dolist (p (plugins bot))
-       (handle-event p *last-message*)))))
+      (dolist (p (plugins bot))
+        (handle-event p *last-message*)))))
 
 (defun handle-errors-in-plugin (err plugin message)
   (declare (ignore plugin message))
@@ -281,6 +279,38 @@ command, that was issued in a channel or a query."
 
 (defparameter *default-irc-port* 6667)
 
+(defun read-message-loop (bot)
+  (loop while
+        (when-let (con (connection bot))
+          (handler-case
+              (bt:with-timeout (3)
+                (irc:read-message con))
+            (condition () t)))))
+
+(defun run-read-thread (bot)
+  (unwind-protect
+       (read-message-loop bot)
+    (let ((connection (connection bot)))
+      (unless (null (connection bot)) ;; stop was called on this bot.
+        (setf (slot-value bot 'connection) nil)
+        (irc:quit connection (quit-message bot))))))
+
+(defun run-control-thread (bot)
+  (loop for x = (chanl:recv (message-channel bot))
+        while (case x
+                (quit nil)
+                (otherwise
+                 (handle-irc-message (car x) bot (cdr x))
+                 t))))
+
+(defun make-hook (bot hook)
+  (lambda (msg)
+    (chanl:send (message-channel bot)
+                (cons hook msg))))
+
+(defun add-hook (bot hook)
+  (irc:add-hook (connection bot) hook (make-hook bot hook)))
+
 (defmethod start ((bot bot) server &optional (port *default-irc-port*))
   (if-let (conn (irc:connect
 		 :server server
@@ -289,38 +319,37 @@ command, that was issued in a channel or a query."
 		 :logging-stream *debug*))
     (progn
       (setf (slot-value bot 'connection) conn)
-      (dolist (hook *hooks*)
-	(irc:add-hook conn
-		      (car hook)
-		      (lambda (message)
-			(funcall (cdr hook) bot message))))
-      (unwind-protect
-	   (irc:read-message-loop (connection bot))
-	(let ((connection (connection bot)))
-	  (unless (null (connection bot)) ;; stop was called on this bot.
-	    (setf (slot-value bot 'connection) nil)
-	    (irc:quit connection (quit-message bot))))))
+      (mapc (curry #'add-hook bot) *hooks*)
+      (setf (read-thread bot)
+            (bt:make-thread (lambda () (run-read-thread bot)) :name "bot read thread"))
+      (setf (control-thread bot)
+       (bt:make-thread (lambda () (run-control-thread bot)) :name "bot control thread")))
     (error "could not connect to server")))
 
 (defmethod stop ((bot bot))
   (if-let (con (connection bot))
     (progn
       (setf (slot-value bot 'connection) nil)
+      (loop while (bt:thread-alive-p (read-thread bot)) do (sleep 1))
+      (chanl:send (message-channel bot) 'quit)
+      (loop while (bt:thread-alive-p (control-thread bot)) do (sleep 1))
       (irc:quit con (quit-message bot)))
     (error "The bot was not started.")))
 
 (defmethod send (lines to (bot bot) &key actionp)
-  (let ((connection (connection bot))
-	(to (if (userp to) (nick to) to))
-	(lines (if actionp
-		   (actionize-lines lines)
-		   (ensure-list lines))))
-   (loop for msg in lines
-      for i from 1
-      do (progn
-	   (irc:privmsg connection to msg)
-	   (when (= (mod i 3) 0)
-	     (sleep 1))))))
+  (bt:with-recursive-lock-held ((bot-lock bot))
+   (let ((connection (connection bot))
+         (to (if (userp to) (nick to) to))
+         (lines (if actionp
+                    (actionize-lines lines)
+                    (ensure-list lines))))
+     (when connection
+      (loop for msg in lines
+            for i from 1
+            do (progn
+                 (irc:privmsg connection to msg)
+                 (when (= (mod i 3) 0)
+                   (sleep 1))))))))
 
 (defmethod handle-event ((plugin plugin) (event event))
   (declare (ignore plugin event))
@@ -382,8 +411,22 @@ command, that was issued in a channel or a query."
 	  (name user)
 	  (host user)))
 
-(defmethod initialize-instance :after ((bot bot) &key plugins)
-  (apply #'add-plugins bot plugins))
+(defmethod add-plugins ((self bot) &rest plugins)
+  (bt:with-recursive-lock-held ((bot-lock self))
+   (labels ((make-plugins (plugins)
+              (loop for p in plugins appending
+                    (cond
+                      ((listp p) (make-plugins p))
+                      ((symbolp p) (ensure-list (make-instance p :bot self)))
+                      ((subtypep (type-of p) 'plugin) (progn
+                                                        (setf (slot-value p 'bot) self)
+                                                        (ensure-list p)))
+                      (t (error "strange plugin: ~a" p))))))
+     (appendf (plugins self) (make-plugins plugins)))))
+
+(defmethod initialize-instance :after ((bot bot) &key plugins channels)
+  (apply #'add-plugins bot plugins)
+  (setf (slot-value bot 'channels) (ensure-list channels)))
 
 (defmethod print-object ((object bot) s)
   (print-unreadable-object (object s :type t)

@@ -14,4 +14,6 @@
   :depends-on (:cl-irc
 	       :cl-ppcre
 	       :split-sequence
-	       :alexandria))
+	       :alexandria
+               :bordeaux-threads
+               :chanl))
