@@ -69,7 +69,7 @@
     :accessor bot-lock
     :documentation "The big bot write lock")
    (message-channel
-    :initform (make-instance 'chanl:unbounded-channel)
+    :initform (make-instance 'channel)
     :accessor message-channel
     :documentation "Messages received from the network but not processed yet")
    (control-thread
@@ -296,7 +296,7 @@ command, that was issued in a channel or a query."
         (irc:quit connection (quit-message bot))))))
 
 (defun run-control-thread (bot)
-  (loop for x = (chanl:recv (message-channel bot))
+  (loop for x = (channel-recv (message-channel bot))
         while (case x
                 (quit nil)
                 (otherwise
@@ -305,7 +305,7 @@ command, that was issued in a channel or a query."
 
 (defun make-hook (bot hook)
   (lambda (msg)
-    (chanl:send (message-channel bot)
+    (channel-send (message-channel bot)
                 (cons hook msg))))
 
 (defun add-hook (bot hook)
@@ -330,9 +330,10 @@ command, that was issued in a channel or a query."
   (if-let (con (connection bot))
     (progn
       (setf (slot-value bot 'connection) nil)
-      (loop while (bt:thread-alive-p (read-thread bot)) do (sleep 1))
-      (chanl:send (message-channel bot) 'quit)
+      (channel-send-out-of-band (message-channel bot) 'quit)
       (loop while (bt:thread-alive-p (control-thread bot)) do (sleep 1))
+      (loop while (bt:thread-alive-p (read-thread bot)) do (sleep 1))
+      (channel-clear (message-channel bot))
       (irc:quit con (quit-message bot)))
     (error "The bot was not started.")))
 

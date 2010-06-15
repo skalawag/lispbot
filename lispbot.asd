@@ -15,5 +15,4 @@
 	       :cl-ppcre
 	       :split-sequence
 	       :alexandria
-               :bordeaux-threads
-               :chanl))
+               :bordeaux-threads))
