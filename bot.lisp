@@ -142,18 +142,57 @@ If `to-user-p' is t, address the user of the last received message directly"))
   "this is bound to the last message to the bot during the exectution of commands
 or the `handle-event' method of plugins")
 
+(defclass command ()
+  ((name
+    :initarg :name
+    :accessor command-name
+    :documentation "The thing, a query will be matched against. Can be a string or
+a symbol")
+   (function
+    :initarg :function
+    :accessor command-function
+    :documentation "The actual function to call when the command is run")
+   (doc-string
+    :initform nil
+    :initarg :doc
+    :accessor command-doc-string
+    :documentation "The documentation for this command. Can for example be used in
+a help plugin")))
+
+(defun make-command (name function &key doc)
+  "create a new command `name' can be a string or a symbol"
+  (make-instance 'command :name (string-downcase (string name)) :function function :doc doc))
+
+(defgeneric commands (plugin)
+  (:documentation "return a list of all commands of the plugin"))
+
+(defgeneric add-command (plugin command)
+  (:documentation "add or replace a command to the plugin"))
+
+(defgeneric remove-command (plugin command)
+  (:documentation "remove a command from the plugin"))
+
+(defgeneric run-command (command &rest args)
+  (:documentation "run this command"))
+
+(defgeneric find-command (plugin command)
+  (:documentation "return a command named by `command' from `plugin', or nil
+if there is no such command"))
+
+(defgeneric command-matches-p (command-designator command)
+  (:documentation "return true if the command-name of `command'
+matches the `command-designator' which can be a string, a symbol
+of an instance of the command class."))
+
 (defmacro defcommand (name ((plvar plclass) &rest args) &body body)
-  "define a new command for the plugin `plclass'. `Name' can be a string, or
-a symbol (in witch case the command will be the lowercase symbolname). All
-other parameters `args' are matched against the arguments to the
-command, that was issued in a channel or a query."
-  (with-gensyms (command closure)
-   `(let ((,command (assoc ',name (get ',plclass :commands)))
-	  (,closure (lambda (,plvar ,@args) ,@body)))
-      (if ,command
-	  (setf (cdr ,command) ,closure)
-	  (push (cons ',name ,closure)
-		(get ',plclass :commands))))))
+  "add a new command to the plugin `plclass'. The name can be a string or a symbol.
+If the first element of body is a string, it will be used as docstring for the
+new command."
+  (let* ((doc (if (stringp (first body)) (first body) nil))
+         (body (if (stringp (first body)) (rest body) body))
+         (fun `(lambda (,plvar ,@args) ,@body)))
+    `(add-command ',plclass
+                  (make-command ',name ,fun :doc ,doc))))
 
  ;;;;;;;;;;;;;;;
 ;;             ;;
@@ -199,10 +238,11 @@ command, that was issued in a channel or a query."
 (defgeneric handle-irc-message (type bot message))
 
 (defmethod handle-irc-message ((type (eql 'irc:irc-rpl_luserme-message)) bot msg)
+  (declare (ignore msg))
   (dolist (chan (channels bot))
     (irc:join (connection bot) chan)))
 
-(defmethod handle-irc-message ((type (eql 'irc:irc-privmsg-message)) bot msg) 
+(defmethod handle-irc-message ((type (eql 'irc:irc-privmsg-message)) bot msg)
   (let ((message (make-event msg bot)))
     (handle-priv-message message)))
 
@@ -212,8 +252,8 @@ command, that was issued in a channel or a query."
       (dolist (p (plugins bot))
         (handle-event p *last-message*)))))
 
-(defun handle-errors-in-plugin (err plugin message)
-  (declare (ignore plugin message))
+(defun handle-errors-in-plugin (err message)
+  (declare (ignore message))
   (reply (format nil "error: ~a~%" err)))
 
 (defun command-regex (cmd)
@@ -240,18 +280,19 @@ command, that was issued in a channel or a query."
 					   :remove-empty-subseqs t)))
     list))
 
+(defun run-command-by-name (bot command &rest args)
+  (when-let (plugin (find-if (rcurry #'find-command command)
+                             (plugins bot)))
+    (apply #'run-command (find-command plugin command) (cons plugin args))))
+
 (defun call-commands (message)
-  (dolist (plugin (plugins (bot message)))
-    (let ((*last-message* message))
-      (dolist (command (get (class-name (class-of plugin)) :commands))
-	(destructuring-bind (name . function) command
-	  (multiple-value-bind (match msg)
-	      (ppcre:scan-to-strings (command-regex name) (text message))
-	    (when match
-	      (handler-case
-                  (apply function plugin (split-string (elt msg 1)))
-		(condition (err)
-		  (handle-errors-in-plugin err plugin message))))))))))
+  (let ((*last-message* message)
+        (args (split-string (text message))))
+    (handler-case
+        (apply #'run-command-by-name (bot message) (first args)
+               (rest args))
+      (condition (err)
+        (handle-errors-in-plugin err message)))))
 
 (defun call-event-handlers (event)
   (dolist (p (plugins (bot event)))
@@ -428,6 +469,39 @@ command, that was issued in a channel or a query."
 (defmethod initialize-instance :after ((bot bot) &key plugins channels)
   (apply #'add-plugins bot plugins)
   (setf (slot-value bot 'channels) (ensure-list channels)))
+
+;; Plugins and commands
+(defun ensure-plugin-symbol (thing)
+  (if (symbolp thing) thing (type-of thing)))
+
+(defmethod commands (self)
+  (get (ensure-plugin-symbol self) :commands))
+
+(defmethod add-command (plugin (cmd command))
+  (setf (get (ensure-plugin-symbol plugin) :commands)
+        (cons cmd (delete cmd (get (ensure-plugin-symbol plugin) :commands)
+                          :test #'command-matches-p))))
+
+(defmethod remove-command (plugin cmd)
+  (setf (get (ensure-plugin-symbol plugin) :commands)
+        (delete cmd (get (ensure-plugin-symbol plugin) :commands)
+                :test #'command-matches-p)))
+
+(defmethod run-command ((self command) &rest args)
+  (apply (command-function self) args))
+
+(defmethod find-command (plugin command)
+  (find command (commands plugin) :test #'command-matches-p))
+
+(defmethod command-matches-p ((s string) (self command))
+  (string= (command-name self) s))
+
+(defmethod command-matches-p ((s symbol) (self command))
+  (string-equal (command-name self) (string-downcase (symbol-name s))))
+
+(defmethod command-matches-p ((other command) (self command))
+  (string-equal (command-name self)
+                (command-name other)))
 
 (defmethod print-object ((object bot) s)
   (print-unreadable-object (object s :type t)
