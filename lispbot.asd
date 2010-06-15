@@ -7,9 +7,12 @@
   :description "An IRC-bot framework"
   :components ((:file "events"
 		      :depends-on ("package"))
+               (:file "threads"
+                      :depends-on ("package"))
 	       (:file "bot"
 		      :depends-on ("events"
-				   "package"))
+				   "package"
+                                   "threads"))
 	       (:file "package"))
   :depends-on (:cl-irc
 	       :cl-ppcre
