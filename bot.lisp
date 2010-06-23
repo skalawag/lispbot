@@ -78,16 +78,6 @@
     :accessor read-thread))
   (:documentation "a irc bot"))
 
-;(defun make-bot (nick channels &rest keywords &key plugins data-dir quit-message)
-;  "return a new bot with the nickname NICK witch joins the channels CHANNELS.
-;plugins can be instances of classes derived from PLUGIN, names of classes
-;derived from PLUGIN or lists of those including lists of lists of ..."
-;  (declare (ignore plugins data-dir quit-message))
-;  (apply #'make-instance 'bot
-;	 :channels (ensure-list channels)
-;	 :nick nick
-;	 keywords))
-
 (defgeneric start (bot server &optional port)
   (:documentation "connect to server and enter read loop"))
 
@@ -119,11 +109,9 @@ If `to-user-p' is t, address the user of the last received message directly"))
 ;;               ;;
  ;;;;;;;;;;;;;;;;;
 
-;; TODO: Make a special meta class for plugins.
-
 (defclass plugin ()
   ((name
-    :initform (error "Plugins need names")
+    :initform "noname"
     :accessor name
     :initarg :name)
    (bot
@@ -255,11 +243,6 @@ new command."
 (defun handle-errors-in-plugin (err message)
   (declare (ignore message))
   (reply (format nil "error: ~a~%" err)))
-
-(defun command-regex (cmd)
-  (format nil "^~a( (.*))?$" (if (symbolp cmd)
-				   (string-downcase (symbol-name cmd))
-				   cmd)))
 
 (defun string-splitter ()
   (let ((in-quotes nil)
