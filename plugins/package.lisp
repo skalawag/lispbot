@@ -4,9 +4,13 @@
   (:nicknames :bot.plugins)
   (:export :greet-plugin
 	   :help-plugin
-	   :dice-plugin
 	   :decide-plugin
 	   :poll-plugin
+
+           ;; dice plugin
+           :dice-plugin
+           :dice-max-rolls
+           :*dice-max-rolls-default*
 
            ;; remember plugin specific
 	   :remember-plugin
