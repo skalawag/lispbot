@@ -25,6 +25,7 @@
 	   :name
 	   :defcommand
 	   :help
+           :help-for-commands
 	   :handle-event
 	   :*last-message*
 

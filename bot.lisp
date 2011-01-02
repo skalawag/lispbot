@@ -145,6 +145,12 @@ If `to-user-p' is t, address the user of the last received message directly"))
   "this is bound to the last message to the bot during the execution of commands
 or the `handle-event' methods of plugins")
 
+(defun help-for-commands (plugin)
+  "Print the lambda-lists and docstrings of all commands from `plugin'
+To be used in the `help' method."
+  (reply (mappend (curry #'help-for-command (bot plugin))
+                  (commands plugin)) nil))
+
 (defclass command ()
   ((name
     :initarg :name
@@ -155,6 +161,10 @@ a symbol")
     :initarg :function
     :accessor command-function
     :documentation "The actual function to call when the command is run")
+   (lambda-list
+    :initarg :lambda-list
+    :accessor command-lambda-list
+    :documentation "The lambda list of the function")
    (doc-string
     :initform nil
     :initarg :doc
@@ -162,9 +172,13 @@ a symbol")
     :documentation "The documentation for this command. Can for example be used in
 a help plugin")))
 
-(defun make-command (name function &key doc)
+(defun make-command (name lambda-list function &key doc)
   "create a new command `name' can be a string or a symbol"
-  (make-instance 'command :name (string-downcase (string name)) :function function :doc doc))
+  (make-instance 'command
+                 :name (string-downcase (string name))
+                 :function function
+                 :lambda-list lambda-list
+                 :doc doc))
 
 (defgeneric commands (plugin)
   (:documentation "return a list of all commands of the plugin"))
@@ -195,7 +209,7 @@ new command."
          (body (if (stringp (first body)) (rest body) body))
          (fun `(lambda (,plvar ,@args) ,@body)))
     `(add-command ',plclass
-                  (make-command ',name ,fun :doc ,doc))))
+                  (make-command ',name ',args ,fun :doc ,doc))))
 
  ;;;;;;;;;;;;;;;
 ;;             ;;
@@ -527,6 +541,16 @@ new command."
 (defmethod command-matches-p ((other command) (self command))
   (string-equal (command-name self)
                 (command-name other)))
+
+(defun help-for-command (bot command)
+  (let ((doclines (partition:split-sequence
+                   #\Newline (command-doc-string command)
+                   :remove-empty-subseqs t)))
+    (cons (format nil "~a~a~{~^ ~(~a~)~}: ~a" (command-prefix bot)
+                  (command-name command)
+                  (command-lambda-list command)
+                  (or (first doclines) "no help available"))
+          (rest doclines))))
 
 (defmethod print-object ((object bot) s)
   (print-unreadable-object (object s :type t)
