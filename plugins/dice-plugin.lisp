@@ -28,140 +28,112 @@
 
 (in-package :lispbot.plugins)
 
-(defun dice-emptyp (string)
-  (string-equal string ""))
+(defparameter *dice-max-rolls-default* 30
+  "maximum number of rolls, the bot will perform in one XdY expression")
 
-(defun dice-char-numberp (char)
-  (cond
-    ((or
-      (char-equal char #\0)
-      (char-equal char #\1)
-      (char-equal char #\2)
-      (char-equal char #\3)
-      (char-equal char #\4)
-      (char-equal char #\5)
-      (char-equal char #\6)
-      (char-equal char #\7)
-      (char-equal char #\8)
-      (char-equal char #\9))
-     t)
-    (t nil)))
+(defclass dice-plugin (plugin)
+  ((max-rolls
+    :initarg :max-rolls
+    :initform *dice-max-rolls-default*
+    :accessor dice-max-rolls))
+  (:default-initargs :name "dice"))
 
-(defun dice-first-non-whitespace (string)
-  (do ((index 0 (1+ index)))
-      ((or
-	    (>= index (length string))
-	    (not (let ((char (char string index)))
-		   (or (char-equal #\Space char)
-		       (char-equal #\Tab char)))))
-       index)))
+(defmethod help ((self dice-plugin))
+  (help-for-commands self))
 
-(defun dice-str-to-num (string index)
-  (read-from-string (subseq string 0 index)))
+(defcommand roll ((self dice-plugin) &rest expr)
+  "rolls dices for you
+`expr' is of the form: 3 * 2d20 + 4"
+  (let ((*dice-max-rolls-default* (dice-max-rolls self)))
+    (multiple-value-bind (res rolls)
+        (dice-parse (reduce (curry #'concatenate 'string) expr))
+      (reply (format nil "Result: ~a | dices: ~:[none~;~:*~{~a~^ ~}~]" res rolls) t))))
 
-(defun dice-extract-number (string)
-  (do ((index 0 (1+ index)))
-      ((or (>= index (length string))
-	   (not (or
-		 (dice-char-numberp (char string index))
-		 (char-equal #\. (char string index)))))
-       (values (dice-str-to-num string index) index))))
-
-(define-condition dice-unknown-token (error)
-  ((text :initarg :text :reader text)))
+(defvar *dice-tokens* nil)
+(defvar *dice-curtok* nil)
+(defvar *dice-rolls* nil)
 
 (defun dice-tokenize (string)
-  (let ((string (subseq string (dice-first-non-whitespace string))))
-    (if (dice-emptyp string)
-	nil
-	(let ((char (char string 0)) (next-char 1))
-	  (cons (cond
-		  ((char-equal char #\+) :+)
-		  ((char-equal char #\-) :-)
-		  ((char-equal char #\() :PAREN_O)
-		  ((char-equal char #\)) :PAREN_C)
-		  ((char-equal char #\w) :W)
-		  ((char-equal char #\d) :W)
-		  ((char-equal char #\*) :*)
-		  ((char-equal char #\/) :/)
-		  ((dice-char-numberp char)
-		   (multiple-value-bind (number index) (dice-extract-number string)
-		     (setf next-char index)
-		     number))
-		  (t (error 'dice-unknown-token :text (format nil "Unknown symbol ~A" char))))
-		(dice-tokenize (subseq string next-char)))))))
+  (labels ((skip-number (string index)
+             (position-if (lambda (c) (not (char<= #\0 c #\9)))
+                          string :start index))
 
-(defparameter *dice-tokens* nil)
-(defparameter *dice-curtok* nil)
-(defparameter *dice-rolls* nil)
+           (op-symbol (char) (make-keyword (string-upcase (string char)))))
 
-(defun dice-roll (times dice)
-  (when (not (and (integerp times)
-		  (> times 0)
-		  (integerp dice)
-		  (> dice 0)))
-    (error "Wrong arguments for the dice"))
-  (let ((sum 0))
-    (dotimes (nix times sum)
-      (let ((res (+ (random dice) 1)))
-	(push res *dice-rolls*)
-	(incf sum res)))))
+    (do ((result)
+         (index 0 (1+ index)))
+        ((length= string index) (nreverse result))
+      (let ((char (char string index)))
+        (case char
+          ((#\0 #\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9)
+           (let ((newindex (skip-number string index)))
+             (push (parse-integer string :start index :end newindex)
+                   result)
+             (setf index (1- (or newindex (length string))))))
+          ((#\( #\) #\+ #\- #\/ #\* #\w #\d)
+           (push (op-symbol char) result))
+          ((#\Tab #\Space) 'skip)
+          (otherwise (error "Illegal token ~a" char)))))))
+
+(defun dice-get-token ()
+  (setf *dice-curtok* (pop *dice-tokens*)))
 
 (defun dice-primitive ()
-  (let ((a (pop *dice-tokens*)))
+  (let ((token (dice-get-token)))
     (cond
-      ((equal a :-) (list '- (dice-primitive)))
-      ((equal a :PAREN_O) 
+      ((eq token :-)
+       (let ((a (dice-get-token)))
+         (if (numberp a)
+             (prog1 (- a) (dice-get-token))
+             (error "Number expected, ~a found" a))))
+      ((eq token :|(|)
        (let ((a (dice-expression)))
-	 (setf *dice-curtok* (pop *dice-tokens*))
-	 a))
-      ((equal a :PAREN_C) (error "Hmm, what is this paren doing here? is this lisp?"))
-      ((equal a :W)
-       (progn
-	 (setf *dice-curtok* :W)
-	 1))
-      ((numberp a)
-       (progn
-	 (setf *dice-curtok* (pop *dice-tokens*))
-	 a))
-      (t (error "I don't know... the syntax is fucked up")))))
+         (if (eq *dice-curtok* :|)|)
+             (progn (dice-get-token) a)
+             (error "Missing closing paren"))))
+      ((eq token :|)|) (error "One closing paren too much"))
+      ((numberp token) (prog1 token (dice-get-token)))
+      (t (error "Unexpected token ~a" token)))))
+
+(defun dice-roll (times dice)
+  (assert (and (> times 0) (<= times *dice-max-rolls-default*) (> dice 0))
+          (times dice)
+          "Arguments fo `dice' out of bounds: ~ad~a" times dice)
+  (loop repeat times
+        for roll = (1+ (random dice))
+        do (push roll *dice-rolls*)
+        sum roll))
 
 (defun dice-dice ()
   (let ((a (dice-primitive)))
-    (if (equal *dice-curtok* :W)
-	(list 'dice-roll a (dice-primitive))
-	a)))
+    (if (member *dice-curtok* '(:w :d))
+        (dice-roll a (dice-primitive))
+        a)))
 
 (defun dice-term ()
-  (let ((a (dice-dice)))
-    (cond
-      ((equal *dice-curtok* :*) (list '* a (dice-term)))
-      ((equal *dice-curtok* :/) (list '/ a (dice-term)))
-      (t a))))
+  (let ((all (dice-dice)))
+    (loop for token = *dice-curtok*
+          while (member token '(:/ :*))
+          do (setf all (if (eq *dice-curtok* :*)
+                           (* all (dice-dice))
+                           (/ all (dice-dice))))
+          finally (return all))))
 
 (defun dice-expression ()
-  (let ((a (dice-term)))
-    (cond
-      ((equal *dice-curtok* :+) (list '+ a (dice-expression)))
-      ((equal *dice-curtok* :-) (list '- a (dice-expression)))
-      (t a))))
+  (let ((sum (dice-term)))
+    (loop for token = *dice-curtok*
+          while (member token '(:+ :-))
+          do (setf sum (+ sum (if (eq *dice-curtok* :-)
+                                  (- (dice-term))
+                                  (dice-term))))
+          finally (return sum))))
 
 (defun dice-parse (string)
-  (let ((*dice-tokens* (dice-tokenize string)) (*dice-curtok* nil))
-    (dice-expression)))
+  (let ((*dice-tokens* (dice-tokenize string))
+        (*dice-curtok* nil)
+        (*dice-rolls* nil))
+    (values (dice-expression) *dice-rolls*)))
 
-(defclass dice-plugin (plugin)
-  ()
-  (:default-initargs :name "dice"))
 
-(defmethod help ((plugin dice-plugin))
-  (reply '("!roll <expr>: rolls dices for you"
-	   "expr is a expression of the form: 3* 2d20 + 4")))
 
-(defcommand roll ((plugin dice-plugin) &rest args)
-  (declare (ignore plugin))
-  (handler-case
-      (let ((*dice-rolls* nil))
-	(let ((res (eval (dice-parse (format nil "~{~a~^ ~}" args)))))
-	  (reply (format nil "Result: ~A | dices: ~A" res *dice-rolls*) t)))
-    (error (err) (reply (format nil "Uh Oh, an error: ~A" (text err)) t))))
+
