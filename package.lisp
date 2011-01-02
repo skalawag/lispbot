@@ -11,6 +11,7 @@
 	   :channels
 	   :nick
 	   :data-dir
+           :command-prefix
 
 	   :reply
 	   :action

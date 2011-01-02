@@ -32,13 +32,7 @@
   (:documentation "A message from another user that contain text"))
 
 (defclass channel-message (message)
-  ((original-text
-    :initarg :original-text
-    :accessor original-text
-    :documentation "The text of this message as it was received by the bot.
-note, that the bot is allowed to modify the TEXT-slot, e.g by stripping some
-command prefix")
-   (channel
+  ((channel
     :initarg :channel
     :reader channel
     :documentation "The channel the message was received in"))

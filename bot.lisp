@@ -64,6 +64,11 @@
     :initarg :data-dir
     :accessor data-dir
     :documentation "the directory where the bot and plugins will store there files")
+   (command-prefix
+    :initform "!"
+    :initarg :command-prefix
+    :accessor command-prefix
+    :documentation "Control what the bot recognizes as commands")
    (bot-lock
     :initform (bt:make-recursive-lock "global bot lock")
     :accessor bot-lock
@@ -210,8 +215,8 @@ new command."
 (defun userp (object)
   (eq (type-of object) 'user))
 
-(defun not-self-p (user bot)
-  (not (string= (nick bot) (nick user))))
+(defun selfp (user bot)
+  (string= (nick bot) (nick user)))
 
  ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;                         ;;
@@ -268,9 +273,9 @@ new command."
                              (plugins bot)))
     (apply #'run-command (find-command plugin command) (cons plugin args))))
 
-(defun call-commands (message)
+(defun call-commands (message command)
   (let ((*last-message* message)
-        (args (split-string (text message))))
+        (args (split-string command)))
     (handler-case
         (apply #'run-command-by-name (bot message) (first args)
                (rest args))
@@ -281,19 +286,24 @@ new command."
   (dolist (p (plugins (bot event)))
     (handle-event p event)))
 
+(defun is-message-a-command-p (nick prefix text)
+  (ppcre:scan-to-strings
+   (concatenate 'string "^(" nick "\\W+"
+                "|" prefix ")(.*)")
+   text))
+
 (defun handle-priv-message (message)
   (with-slots (bot text sender) message
-    (when (not-self-p sender bot) ;; never respond to myself!!
+    (when (not (selfp sender bot)) ;; never respond to myself!!
       (let ((*last-message* message))
-       (call-event-handlers message))
+        (call-event-handlers message))
       (if (typep message 'channel-message)
 	  (multiple-value-bind (match msg)
-	      (ppcre:scan-to-strings (concatenate 'string "^(" (nick bot) "\\W+|!)(.*)") text)
-	    (when match
-	      (setf (original-text message) text)
-	      (setf text (elt msg 1))
-	      (call-commands message)))
-	  (call-commands message)))))
+	      (is-message-a-command-p (nick bot)
+                                      (command-prefix bot)
+                                      text)
+	    (when match (call-commands message (elt msg 1))))
+	  (call-commands message text)))))
 
  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;                              ;;
