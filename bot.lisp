@@ -101,7 +101,7 @@ lists of ..."))
 If `to-user-p' is t, address the user of the last received message directly"))
 
 (defgeneric action (texts)
-  (:documentation "can be used by plugins write a /me message"))
+  (:documentation "can be used by plugins to write a /me message"))
 
  ;;;;;;;;;;;;;;;;;
 ;;               ;;
@@ -127,8 +127,8 @@ If `to-user-p' is t, address the user of the last received message directly"))
   (:documentation "called when the user requests help for a plugin"))
 
 (defparameter *last-message* nil
-  "this is bound to the last message to the bot during the exectution of commands
-or the `handle-event' method of plugins")
+  "this is bound to the last message to the bot during the execution of commands
+or the `handle-event' methods of plugins")
 
 (defclass command ()
   ((name
