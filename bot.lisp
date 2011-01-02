@@ -108,6 +108,10 @@ If `to-user-p' is t, address the user of the last received message directly"))
 (defgeneric action (texts)
   (:documentation "can be used by plugins to write a /me message"))
 
+(defmacro with-bot-lock (bot &body body)
+  `(bt:with-recursive-lock-held ((bot-lock ,bot))
+     ,@body))
+
  ;;;;;;;;;;;;;;;;;
 ;;               ;;
 ;; Plugin Class  ;;
@@ -372,19 +376,19 @@ new command."
     (error "The bot was not started.")))
 
 (defmethod send (lines to (bot bot) &key actionp)
-  (bt:with-recursive-lock-held ((bot-lock bot))
-   (let ((connection (connection bot))
-         (to (if (userp to) (nick to) to))
-         (lines (if actionp
-                    (actionize-lines lines)
-                    (ensure-list lines))))
-     (when connection
-      (loop for msg in lines
-            for i from 1
-            do (progn
-                 (irc:privmsg connection to msg)
-                 (when (= (mod i 3) 0)
-                   (sleep 1))))))))
+  (with-bot-lock bot
+    (let ((connection (connection bot))
+          (to (if (userp to) (nick to) to))
+          (lines (if actionp
+                     (actionize-lines lines)
+                     (ensure-list lines))))
+      (when connection
+        (loop for msg in lines
+              for i from 1
+              do (progn
+                   (irc:privmsg connection to msg)
+                   (when (= (mod i 3) 0)
+                     (sleep 1))))))))
 
 (defmethod handle-event ((plugin plugin) (event event))
   (declare (ignore plugin event))
@@ -447,17 +451,17 @@ new command."
 	  (host user)))
 
 (defmethod add-plugins ((self bot) &rest plugins)
-  (bt:with-recursive-lock-held ((bot-lock self))
-   (labels ((make-plugins (plugins)
-              (loop for p in plugins appending
-                    (cond
-                      ((listp p) (make-plugins p))
-                      ((symbolp p) (ensure-list (make-instance p :bot self)))
-                      ((subtypep (type-of p) 'plugin) (progn
-                                                        (setf (slot-value p 'bot) self)
-                                                        (ensure-list p)))
-                      (t (error "strange plugin: ~a" p))))))
-     (appendf (plugins self) (make-plugins plugins)))))
+  (with-bot-lock self
+    (labels ((make-plugins (plugins)
+               (loop for p in plugins appending
+                     (cond
+                       ((listp p) (make-plugins p))
+                       ((symbolp p) (ensure-list (make-instance p :bot self)))
+                       ((subtypep (type-of p) 'plugin) (progn
+                                                         (setf (slot-value p 'bot) self)
+                                                         (ensure-list p)))
+                       (t (error "strange plugin: ~a" p))))))
+      (appendf (plugins self) (make-plugins plugins)))))
 
 (defmethod initialize-instance :after ((bot bot) &key plugins channels)
   (apply #'add-plugins bot plugins)
