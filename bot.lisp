@@ -93,6 +93,12 @@
   (:documentation "send a privmsg to `to' (which can be a chan or a user).
 If `actionp' is true, use the ctcp action command"))
 
+(defgeneric join (bot channel)
+  (:documentation "Join a channel"))
+
+(defgeneric leave (bot channel &key message)
+  (:documentation "Leave a channel"))
+
 (defgeneric add-plugins (bot &rest plugins)
   (:documentation "add `plugins' to the bot. Plugins can be instances of classes derived
 from PLUGIN, names of classes derived from PLUGIN or lists of those including lists of
@@ -229,8 +235,10 @@ new command."
  ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defparameter *hooks*
-  '(irc:irc-rpl_luserme-message irc:irc-privmsg-message
-    irc:irc-join-message))
+  '(irc:irc-rpl_luserme-message
+    irc:irc-privmsg-message
+    irc:irc-join-message
+    irc:irc-part-message))
 
 (defgeneric handle-irc-message (type bot message))
 
@@ -245,9 +253,17 @@ new command."
 
 (defmethod handle-irc-message ((type (eql 'irc:irc-join-message)) bot msg)
   (let ((*last-message* (make-event msg bot)))
-    (when (not (string= (nick bot) (nick (user *last-message*))))
-      (dolist (p (plugins bot))
-        (handle-event p *last-message*)))))
+    (if (selfp (user *last-message*) bot)
+        (with-bot-lock bot
+          (pushnew (channel *last-message*) (slot-value bot 'channels) :test #'string=))
+        (call-event-handlers *last-message*))))
+
+(defmethod handle-irc-message ((type (eql 'irc:irc-part-message)) bot msg)
+  (let ((*last-message* (make-event msg bot)))
+    (if (selfp (user *last-message*) bot)
+        (with-bot-lock bot
+          (removef (slot-value bot 'channels) (channel *last-message*) :test #'string=))
+        (call-event-handlers *last-message*))))
 
 (defun handle-errors-in-plugin (err message)
   (declare (ignore message))
@@ -389,6 +405,18 @@ new command."
                    (irc:privmsg connection to msg)
                    (when (= (mod i 3) 0)
                      (sleep 1))))))))
+
+(defmethod join ((self bot) channel)
+  (with-bot-lock self
+    (unless (find channel (channels self) :test #'string=)
+      (irc:join (connection self) channel)
+      t)))
+
+(defmethod leave ((self bot) channel &key message)
+  (with-bot-lock self
+    (when (find channel (channels self) :test #'string=)
+      (irc:part (connection self) channel (or message (quit-message self)))
+      t)))
 
 (defmethod handle-event ((plugin plugin) (event event))
   (declare (ignore plugin event))

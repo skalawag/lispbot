@@ -83,7 +83,11 @@
 		 :bot bot))
 
 (defclass part-event (user-event)
-  ((message
+  ((channel
+    :initarg :channel
+    :reader channel
+    :documentation "The channel that was left")
+   (message
     :initarg :message
     :reader part-message
     :documentation "part message")))
@@ -91,5 +95,6 @@
 (defmethod make-event ((message irc:irc-part-message) bot)
   (make-instance 'part-event
 		 :user (extract-user-from-irc-message message)
-		 :message (last (irc:arguments message))
+                 :channel (car (irc:arguments message))
+		 :message (car (last (irc:arguments message)))
 		 :bot bot))

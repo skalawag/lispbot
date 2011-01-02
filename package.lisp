@@ -18,6 +18,8 @@
 	   :send
 	   :start
 	   :stop
+           :join
+           :leave
 
 	   :plugin
 	   :name
