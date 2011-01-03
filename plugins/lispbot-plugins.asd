@@ -21,5 +21,7 @@
 			  :depends-on ("package"))
                (:file "info-plugin"
                       :depends-on ("package"))
+	       (:file "box-plugin"
+		      :depends-on ("package"))
 	       (:file "package"))
   :depends-on (:lispbot :alexandria))

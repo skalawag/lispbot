@@ -1,0 +1,55 @@
+(in-package :lispbot.plugins)
+
+(defun vowel-p (char)
+  (let ((rchar (char-downcase char)))
+    (case rchar
+      (#\a t)
+      (#\e t)
+      (#\i t)
+      (#\o t)
+      (#\u t)
+      (otherwise nil))))
+
+(defun border-line (string length)
+  (let ((first-vowel (position-if #'vowel-p string)))
+      (format nil "~:@(~a~{~a~}~a~)~%"
+              (subseq string 0 first-vowel)
+              (loop repeat (- length (length string) -1) collect (elt string first-vowel))
+              (subseq string (1+ first-vowel)))))
+
+(defun normal-line (string count)
+  (let ((start (copy-seq string))
+        (end (copy-seq string)))
+    (setf (elt start 0)
+          (char-upcase (elt start 0)))
+    (setf (elt end (- (length end) 1))
+          (char-upcase (elt end (- (length end) 1))))
+    (format nil "~a ~{~a~^ ~} ~a~%" start (loop repeat (- count 2) collect string) end)))
+
+(defun makebox (height width string)
+  (let* ((string-length (+ (length string) 1))
+         (cnts (floor (/ (+ width 1)
+                         string-length)))
+         (border (border-line string (- (* string-length cnts) 1)))
+         (intern (normal-line string cnts)))
+    (append (list border)
+            (loop repeat (- height 2) collect intern)
+            (list border))))
+
+(defclass box-plugin (plugin)
+  ()
+  (:default-initargs :name "box"))
+
+(defmethod help ((plugin box-plugin))
+  (help-for-commands plugin))
+
+(defcommand box ((plugin box-plugin) string height width)
+  "prints a box"
+  (declare (ignore plugin))
+  (let ((width (parse-integer width))
+        (height (parse-integer height)))
+    (if (and (< height 6)
+             (< width 81))
+        (dolist (line (makebox height width string))
+          (reply line))
+        (reply "Not going to make such a large box" t))))

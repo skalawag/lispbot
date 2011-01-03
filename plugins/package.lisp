@@ -8,6 +8,7 @@
 	   :poll-plugin
            :datetime-plugin
            :info-plugin
+           :box-plugin
 
            ;; dice plugin
            :dice-plugin
