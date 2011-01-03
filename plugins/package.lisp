@@ -7,6 +7,7 @@
 	   :decide-plugin
 	   :poll-plugin
            :datetime-plugin
+           :info-plugin
 
            ;; dice plugin
            :dice-plugin
