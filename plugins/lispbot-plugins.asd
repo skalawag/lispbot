@@ -9,6 +9,8 @@
 		      :depends-on ("package"))
 	       (:file "greet-plugin"
 		      :depends-on ("package"))
+	       (:file "datetime-plugin"
+		      :depends-on ("package"))
 	       (:file "help-plugin"
 		      :depends-on ("package"))
 	       (:file "decide-plugin"

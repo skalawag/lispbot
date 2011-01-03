@@ -6,6 +6,7 @@
 	   :help-plugin
 	   :decide-plugin
 	   :poll-plugin
+           :datetime-plugin
 
            ;; dice plugin
            :dice-plugin
