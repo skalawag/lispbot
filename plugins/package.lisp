@@ -9,6 +9,7 @@
            :datetime-plugin
            :info-plugin
            :box-plugin
+	   :cake-plugin
 
            ;; dice plugin
            :dice-plugin
