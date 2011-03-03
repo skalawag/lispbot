@@ -5,7 +5,7 @@
   ()
   (:default-initargs :name "cake"))
 
-(defmethod help ((plugin decide-plugin))
+(defmethod help ((plugin cake-plugin))
   (reply "!cake <number> : draws a crappy ASCII-art cake with <number> candles on top"))
 
 (defun make-cake-layer (size left-delimiter middle right-delimiter)
@@ -17,5 +17,5 @@
 
 (defcommand cake ((plugin cake-plugin) num)
   (declare (ignore plugin))
-  (reply (make-cake-layer (parse-integer  num) " _" "i_" " "))
-  (loop repeat 3 do (reply (make-cake-layer (parse-integer num) "|_" "__" "|"))))
+  (reply (cons (make-cake-layer (parse-integer  num) " _" "i_" " ")
+		 (loop repeat 3 collect (make-cake-layer (parse-integer num) "|_" "__" "|")))))
