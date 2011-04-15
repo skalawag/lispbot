@@ -2,4 +2,5 @@
   (:nicknames :bot.http-plugins :http-plugins)
   (:use :lispbot :cl)
   (:export :google-plugin
-           :tinyurl-plugin))
+           :tinyurl-plugin
+           :bullshit-plugin))

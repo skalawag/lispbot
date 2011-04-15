@@ -9,5 +9,7 @@
   :description "Plugins for the lispbot that use HTTP"
   :components ((:file "package")
 	       (:file "google-plugin"
-		      :depends-on ("package")))
+		      :depends-on ("package"))
+               (:file "bullshit-plugin"
+                      :depends-on ("package")))
   :depends-on (:lispbot :drakma :closure-html :cxml-stp))
