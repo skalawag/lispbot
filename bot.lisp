@@ -222,7 +222,7 @@ new command."
 (defclass user ()
   ((nick
     :initarg :nick
-    :reader nick)
+    :accessor nick)                     ; TODO: setf nick should be /nick-aware
    (username
     :initarg :username
     :reader name)
@@ -279,9 +279,10 @@ new command."
           (removef (slot-value bot 'channels) (channel *last-message*) :test #'string=))
         (call-event-handlers *last-message*))))
 
-(defun handle-errors-in-plugin (err message)
-  (declare (ignore message))
-  (reply (format nil "error: ~a~%" err)))
+(defun handle-errors-in-command (bot command err)
+  (reply (cons (format nil "error in ~a: ~a | Usage:"
+                       (command-name command) err)
+               (help-for-command bot command))))
 
 (defun string-splitter ()
   (let ((in-quotes nil)
@@ -305,16 +306,15 @@ new command."
 (defun run-command-by-name (bot command &rest args)
   (when-let (plugin (find-if (rcurry #'find-command command)
                              (plugins bot)))
-    (apply #'run-command (find-command plugin command) (cons plugin args))))
+    (handler-case
+        (apply #'run-command (find-command plugin command) (cons plugin args))
+      (condition (err)
+        (handle-errors-in-command bot (find-command plugin command) err)))))
 
 (defun call-commands (message command)
   (let ((*last-message* message)
         (args (split-string command)))
-    (handler-case
-        (apply #'run-command-by-name (bot message) (first args)
-               (rest args))
-      (condition (err)
-        (handle-errors-in-plugin err message)))))
+    (apply #'run-command-by-name (bot message) (first args) (rest args))))
 
 (defun call-event-handlers (event)
   (dolist (p (plugins (bot event)))
