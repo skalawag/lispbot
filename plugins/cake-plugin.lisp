@@ -16,7 +16,7 @@
 
 
 (defcommand cake ((plugin cake-plugin) num)
-  "!cake <number> : draws a crappy ASCII-art cake with <number> candles on top"
+  "draws a crappy ASCII-art cake with <num> candles on top"
   (declare (ignore plugin))
   (reply (cons (make-cake-layer (parse-integer  num) " _" "i_" " ")
                (loop repeat 3 collect (make-cake-layer (parse-integer num) "|_" "__" "|")))))
