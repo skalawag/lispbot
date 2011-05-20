@@ -13,7 +13,9 @@
 		      :depends-on ("events"
 				   "package"
                                    "threads"))
-	       (:file "package"))
+	       (:file "package")
+               (:file "testbot"
+                      :depends-on ("bot")))
   :depends-on (:cl-irc
 	       :cl-ppcre
 	       :split-sequence
