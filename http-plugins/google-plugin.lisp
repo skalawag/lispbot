@@ -12,7 +12,8 @@
 
 (defun get-google-matches (search)
   (let* ((html (drakma:http-request *google-url*
-				    :parameters `(("q" . ,search))))
+				    :parameters `(("q" . ,search))
+                                    :user-agent "Mozilla/5.0 (Macintosh; U; Intel Mac OS X; de-de) AppleWebKit/535+ (KHTML, like Gecko) Version/5.0 Safari/535.4+ Lispbot"))
 	 (document (chtml:parse html (cxml-stp:make-builder)))
 	 (res nil))
     (stp:do-recursively (a document)
