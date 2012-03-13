@@ -44,7 +44,7 @@
    (plugins
     :initform nil
     :accessor plugins
-    :documentation "list of plugins for this bot")
+    :documentation "set of plugins for this bot")
    (nick
     :initform "lispbot"
     :initarg :nick
@@ -96,6 +96,21 @@ If `actionp' is true, use the ctcp action command"))
 
 (defgeneric leave (bot channel &key message)
   (:documentation "Leave a channel"))
+
+
+(defgeneric add-plugin (plugin bot)
+  (:documentation "add `plugin' to the bot if there isn't already a plugin with the same name.
+Returns the bot as first value. The second value is either `t' if the plugin was really
+inserted, or `nil' otherwise."))
+
+(defgeneric remove-plugin (plugin-name bot)
+  (:documentation "remove the plugin with the name `plugin-name' from the bot.
+Returns the bot as first value. The second value is either `t' if the plugin was really
+removed, or `nil' otherwise."))
+
+(defgeneric find-plugin (plugin-name bot)
+  (:documentation "return the plugin with `plugin-name' if it exists and nil otherwise"))
+
 
 (defgeneric add-plugins (bot &rest plugins)
   (:documentation "add `plugins' to the bot. Plugins can be instances of classes derived
@@ -490,6 +505,24 @@ new command."
 	  (name user)
 	  (host user)))
 
+(defmethod add-plugin ((plugin plugin) (bot bot))
+  (values bot (unless (find-plugin (name plugin) bot)
+                (push plugin (plugins bot))
+                t)))
+
+(defmethod remove-plugin (name (bot bot))
+  (values bot
+          (when (find-plugin name bot)
+            (setf (plugins bot)
+                  (delete-if (plugin-name= name) (plugins bot)))
+            t)))
+
+(defmethod find-plugin (name (bot bot))
+  (find-if (plugin-name= name) (plugins bot)))
+
+(defun plugin-name= (name)
+  (lambda (plugin) (string= (name plugin) name)))
+
 (defmethod add-plugins ((self bot) &rest plugins)
   (with-bot-lock self
     (labels ((make-plugins (plugins)
@@ -501,7 +534,8 @@ new command."
                                                          (setf (slot-value p 'bot) self)
                                                          (ensure-list p)))
                        (t (error "strange plugin: ~a" p))))))
-      (appendf (plugins self) (make-plugins plugins)))))
+      (reduce #'add-plugin (make-plugins plugins) :initial-value self
+              :from-end t))))
 
 (defmethod initialize-instance :after ((bot bot) &key plugins channels)
   (apply #'add-plugins bot plugins)

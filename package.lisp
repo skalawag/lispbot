@@ -6,12 +6,16 @@
 
 	   :bot
 	   :make-bot
-	   :add-plugins
 	   :plugins
 	   :channels
 	   :nick
 	   :data-dir
            :command-prefix
+
+           :add-plugin
+           :remove-plugin
+           :find-plugin
+           :add-plugins
 
 	   :reply
 	   :action
