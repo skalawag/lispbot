@@ -298,7 +298,7 @@ new command."
 	(t nil)))))
 
 (defun split-string (string)
-  (let ((list (partition:split-sequence-if (string-splitter)
+  (let ((list (split-sequence:split-sequence-if (string-splitter)
 					   string
 					   :remove-empty-subseqs t)))
     list))
@@ -543,7 +543,7 @@ new command."
                 (command-name other)))
 
 (defun help-for-command (bot command)
-  (let ((doclines (partition:split-sequence
+  (let ((doclines (split-sequence:split-sequence
                    #\Newline (command-doc-string command)
                    :remove-empty-subseqs t)))
     (cons (format nil "~a~a~{~^ ~(~a~)~}: ~a" (command-prefix bot)
