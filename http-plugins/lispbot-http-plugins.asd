@@ -11,5 +11,9 @@
 	       (:file "google-plugin"
 		      :depends-on ("package"))
                (:file "bullshit-plugin"
+                      :depends-on ("package"))
+               (:file "tinyurl-plugin"
+                      :depends-on ("package"))
+               (:file "xkcd-plugin"
                       :depends-on ("package")))
   :depends-on (:lispbot :drakma :closure-html :cxml-stp))

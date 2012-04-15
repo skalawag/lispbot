@@ -3,4 +3,5 @@
   (:use :lispbot :cl)
   (:export :google-plugin
            :tinyurl-plugin
-           :bullshit-plugin))
+           :bullshit-plugin
+           :xkcd-plugin))
