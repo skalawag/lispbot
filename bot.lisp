@@ -308,8 +308,7 @@ new command."
               (char= x last-sep)) (progn (setf last-sep nil) t))
         ((member x separators) (progn
                                  (if (not last-sep)
-                                     (setf last-sep x))
-                                 t))
+                                     (progn (setf last-sep x) t))))
 	((char= x #\\) (setf escaped t) nil)
 	((and (char= x #\Space)
 	      (not last-sep))
