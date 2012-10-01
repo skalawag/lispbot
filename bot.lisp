@@ -298,15 +298,20 @@ new command."
                (help-for-command bot command))))
 
 (defun string-splitter ()
-  (let ((in-quotes nil)
+  (let ((separators '(#\' #\"))
+        (last-sep nil)
 	(escaped nil))
     (lambda (x)
       (cond
 	(escaped (setf escaped nil))
+        ((and last-sep
+              (char= x last-sep)) (progn (setf last-sep nil) t))
+        ((member x separators) (progn
+                                 (if (not last-sep)
+                                     (progn (setf last-sep x) t))))
 	((char= x #\\) (setf escaped t) nil)
-	((char= x #\") (setf in-quotes (not in-quotes)) t)
 	((and (char= x #\Space)
-	      (not in-quotes))
+	      (not last-sep))
 	 t)
 	(t nil)))))
 
