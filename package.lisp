@@ -2,14 +2,14 @@
   (:use :cl :alexandria)
   (:nicknames :bot)
   (:export :*default-data-directory*
-	   :*debug*
+           :*debug*
 
-	   :bot
-	   :make-bot
-	   :plugins
-	   :channels
-	   :nick
-	   :data-dir
+           :bot
+           :make-bot
+           :plugins
+           :channels
+           :nick
+           :data-dir
            :command-prefix
 
            :add-plugin
@@ -17,36 +17,36 @@
            :find-plugin
            :add-plugins
 
-	   :reply
-	   :action
-	   :send
-	   :start
-	   :stop
+           :reply
+           :action
+           :send
+           :start
+           :stop
            :join
            :leave
 
-	   :plugin
-	   :name
-	   :defcommand
-	   :help
+           :plugin
+           :name
+           :defcommand
+           :help
            :help-for-commands
-	   :handle-event
-	   :*last-message*
+           :handle-event
+           :*last-message*
 
-	   :event
-	   :message
-	   :time
-	   :text
-	   :sender
-	   :channel-message
-	   :channel
-	   :query-message
-	   :user-event
-	   :join-event
-	   :part-event
+           :event
+           :message
+           :time
+           :text
+           :sender
+           :channel-message
+           :channel
+           :query-message
+           :user-event
+           :join-event
+           :part-event
 
-	   :user
+           :user
            :host
-	   :user-equal
-	   :hostmask
+           :user-equal
+           :hostmask
            :test-bot))
