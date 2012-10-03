@@ -48,4 +48,5 @@
 	   :user
            :host
 	   :user-equal
-	   :hostmask))
+	   :hostmask
+           :test-bot))
