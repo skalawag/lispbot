@@ -34,6 +34,7 @@
            :poll-name
            :poll-description
            :poll-options
-           :poll-users)
+           :poll-users
+           :log-plugin)
   (:documentation "Some (not so) usefull plugins for the lispbot. These are the
 plugins that come with the main distribution. More plugins may be found elsewhere"))
