@@ -49,4 +49,6 @@
            :host
            :user-equal
            :hostmask
-           :test-bot))
+           :test-bot
+           :plugin-blacklist
+           :plugin-whitelist))
