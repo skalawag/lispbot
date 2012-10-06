@@ -67,6 +67,17 @@
     :initarg :command-prefix
     :accessor command-prefix
     :documentation "Control what the bot recognizes as commands")
+   (plugin-blacklist
+    :initform nil
+    :initarg :plugin-blacklist
+    :accessor plugin-blacklist
+    :documentation "Alist of (channel . plugins) pairs. Plugins can also be :all")
+   (plugin-whitelist
+    :initform nil
+    :initarg :plugin-whitelist
+    :accessor plugin-whitelist
+    :documentation "Alist of (channel . plugins) pairs.
+This is applied after the blacklist")
    (bot-lock
     :initform (bt:make-recursive-lock "global bot lock")
     :accessor bot-lock
@@ -321,13 +332,31 @@ new command."
 					   :remove-empty-subseqs t)))
     list))
 
+(defun plugin-allowed-p (blacklist whitelist plugin)
+  (labels ((is-plugin (arg)
+             (typecase arg
+               (string (string= (name plugin) arg))
+               (t (eq arg (type-of plugin))))))
+    (let ((blacklisted (or (eq blacklist :all) (find-if #'is-plugin blacklist)))
+          (whitelisted (find-if #'is-plugin whitelist)))
+      (or (not blacklisted) whitelisted))))
+
+(defun bot-channel-policy (bot channel plugin)
+  (let ((blacklist (cdr (assoc channel (plugin-blacklist bot) :test #'string=)))
+        (whitelist (cdr (assoc channel (plugin-whitelist bot) :test #'string=))))
+    (plugin-allowed-p blacklist whitelist plugin)))
+
+
 (defun run-command-by-name (bot command &rest args)
   (when-let (plugin (find-if (rcurry #'find-command command)
                              (plugins bot)))
-    (handler-case
-        (apply #'run-command (find-command plugin command) (cons plugin args))
-      (condition (err)
-        (handle-errors-in-command bot (find-command plugin command) err)))))
+    (unless (and (typep *last-message* 'channel-message)
+                 (not
+                  (bot-channel-policy bot (channel *last-message*) plugin)))
+      (handler-case
+          (apply #'run-command (find-command plugin command) (cons plugin args))
+        (condition (err)
+          (handle-errors-in-command bot (find-command plugin command) err))))))
 
 (defun call-commands (message command)
   (let ((*last-message* message)
@@ -336,7 +365,10 @@ new command."
 
 (defun call-event-handlers (event)
   (dolist (p (plugins (bot event)))
-    (handle-event p event)))
+    (unless (and (typep event 'channel-message)
+                 (not
+                  (bot-channel-policy (bot event) (channel event) p)))
+     (handle-event p event))))
 
 (defun is-message-a-command-p (nick prefix text)
   (ppcre:scan-to-strings
