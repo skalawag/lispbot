@@ -341,9 +341,14 @@ new command."
           (whitelisted (find-if #'is-plugin whitelist)))
       (or (not blacklisted) whitelisted))))
 
+(defun merge-policy-list (channel list)
+  (let ((all  (cdr (assoc :all list)))
+        (chan (cdr (assoc channel list :test #'string=))))
+    (concatenate 'list (ensure-list all) (ensure-list chan))))
+
 (defun bot-channel-policy (bot channel plugin)
-  (let ((blacklist (cdr (assoc channel (plugin-blacklist bot) :test #'string=)))
-        (whitelist (cdr (assoc channel (plugin-whitelist bot) :test #'string=))))
+  (let ((blacklist (merge-policy-list channel (plugin-blacklist bot)))
+        (whitelist (merge-policy-list channel (plugin-whitelist bot))))
     (plugin-allowed-p blacklist whitelist plugin)))
 
 
@@ -368,7 +373,7 @@ new command."
     (unless (and (typep event 'channel-message)
                  (not
                   (bot-channel-policy (bot event) (channel event) p)))
-     (handle-event p event))))
+      (handle-event p event))))
 
 (defun is-message-a-command-p (nick prefix text)
   (ppcre:scan-to-strings
