@@ -10,6 +10,8 @@
            :info-plugin
            :box-plugin
            :cake-plugin
+           :sheep-plugin
+           :roulette-plugin
 
            ;; dice plugin
            :dice-plugin

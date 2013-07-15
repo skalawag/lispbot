@@ -5,7 +5,11 @@
   :maintainer "Hans-Peter Deifel"
   :licence "GPL"
   :description "Some common plugins for the lispbot"
-  :components ((:file "dice-plugin"
+  :components ((:file "roulette-plugin"
+                      :depends-on ("package"))
+               (:file "sheep-plugin"
+                      :depends-on ("package"))
+               (:file "dice-plugin"
 		      :depends-on ("package"))
 	       (:file "greet-plugin"
 		      :depends-on ("package"))
