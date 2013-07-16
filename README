@@ -35,4 +35,3 @@ To let the bot connect to a server and start, type:
 
 You can stop the bot by interrupting the read-loop (typically `C-c').
 It will automatically disconnect from the server.
-
