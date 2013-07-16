@@ -12,6 +12,7 @@
 (defparameter *standing-challenge* nil)
 (defparameter *challenger* nil)
 (defparameter *challenged* nil)
+(defparameter *stats* (make-hash-table :test 'equal))
 
 ;; figure out how to get the nick of the person who issues this command.
 (defcommand r ((plugin roulette-plugin) target)
@@ -41,9 +42,44 @@
 
 (defcommand undo ((plugin roulette-plugin))
   (declare (ignore plugin))
+  (reply (format nil "~a rescinds the challenge." *challenger*))
   (setf *standing-challenge* nil
         *challenged* nil
         *challenger* nil))
+
+(defun announce-result (key value)
+  (reply
+   (format nil "~a: ~a"
+           key
+           (* (float
+               (/ (first value)
+                  (+ (first value) (second value)))) 100))))
+
+
+(defcommand rstats ((plugin roulette-plugin))
+  (declare (ignore plugin))
+  (maphash #'announce-result *stats*))
+
+(defun log-stats (name win)
+  (cond
+    (win
+     (cond
+       ((gethash name *stats*)
+        (let ((stats (gethash name *stats*)))
+          (setf (first stats) (1+ (first stats)))
+          (setf (gethash name *stats*) stats)))
+       (t
+        (let ((stats '(1 0)))
+          (setf (gethash name *stats*) stats)))))
+    (t
+     (cond
+       ((gethash name *stats*)
+        (let ((stats (gethash name *stats*)))
+          (setf (second stats) (1+ (second stats)))
+          (setf (gethash name *stats*) stats)))
+       (t
+        (let ((stats '(0 1)))
+          (setf (gethash name *stats*) stats)))))))
 
 (defun run-game ()
   (let ((run-length (1+ (random 6)))
@@ -54,7 +90,7 @@
     (sleep 1)
     (dotimes (i run-length)
       (sleep 1)
-      (reply (format nil "~a spins the cylander!" (first players)))
+      (reply (format nil "~a spins the cylinder!" (first players)))
       (sleep 1)
       (cond
         ((< i (- run-length 1))
@@ -62,5 +98,8 @@
         ((= i (- run-length 1))
          (reply "BANG!")
          (reply (format nil "~a has blown his brains out again!" (first players)))
-         (reply (format nil "Congratulations, ~a, you have won!" (second players)))))
+         (sleep 1)
+         (reply (format nil "Congratulations, ~a, you have won!" (second players)))
+         (log-stats (first players) nil)
+         (log-stats (second players) t)))
       (setf players (list (second players) (first players))))))
