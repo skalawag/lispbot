@@ -3,9 +3,7 @@ particularly with regard to the instructions for starting the
 bot. Evaluating following at the repl works for me:
 
 #+BEGIN_SRC lisp
-  (setq bot (make-instance 'bot :nick "lispbot" :channels "#some-irc-channel"
-                           :plugins (list 'bot.plugins:sheep-plugin
-                                          'bot.plugins:roulette-plugin)))
+  (setq bot (make-instance 'bot :nick "lispbot" :channels "#some-irc-channel" :plugins (list 'bot.plugins:sheep-plugin 'bot.plugins:roulette-plugin)))
 
   (bot:start bot "irc.freenode.net")
 #+END_SRC
