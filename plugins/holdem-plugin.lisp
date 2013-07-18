@@ -81,8 +81,14 @@
       ((null *game-started*)
        (reply "There is no holdem game in progress." t))
       ((verify-next nick)
-       (reply (player-fold))
-       (update))
+       (let ((res (player-fold)))
+         ;; if res is a list then player input was defective in some
+         ;; way and we should not update the game-state.
+         (if (listp res)
+             (reply (first res))
+             (progn
+               (reply res)
+               (update)))))
       (t (reply "It's not your turn!" t)))))
 
 (defcommand check ((plugin holdem-plugin))
@@ -92,8 +98,14 @@
       ((null *game-started*)
        (reply "There is no holdem game in progress." t))
       ((verify-next nick)
-       (reply (player-check))
-       (update))
+       (let ((res (player-check)))
+         ;; if res is a list then player input was defective in some
+         ;; way and we should not update the game-state.
+         (if (listp res)
+             (reply (first res))
+             (progn
+               (reply res)
+               (update)))))
       (t (reply "It's not your turn!" t)))))
 
 (defcommand call ((plugin holdem-plugin))
@@ -103,8 +115,14 @@
       ((null *game-started*)
        (reply "There is no holdem game in progress." t))
       ((verify-next nick)
-       (reply (player-call))
-       (update))
+       (let ((res (player-call)))
+         ;; if res is a list then player input was defective in some
+         ;; way and we should not update the game-state.
+         (if (listp res)
+             (reply (first res))
+             (progn
+               (reply res)
+               (update)))))
       (t (reply "It's not your turn!" t)))))
 
 (defcommand bet ((plugin holdem-plugin) amt)
@@ -114,8 +132,14 @@
       ((null *game-started*)
        (reply "There is no holdem game in progress." t))
       ((verify-next nick)
-       (reply (player-bet amt))
-       (update))
+       (let ((res (player-bet amt)))
+         ;; if res is a list then player input was defective in some
+         ;; way and we should not update the game-state.
+         (if (listp res)
+             (reply (first res))
+             (progn
+               (reply res)
+               (update)))))
       (t (reply "It's not your turn!" t)))))
 
 (defcommand raise ((plugin holdem-plugin) amt)
@@ -125,8 +149,14 @@
       ((null *game-started*)
        (reply "There is no holdem game in progress." t))
       ((verify-next nick)
-       (reply (player-raise amt))
-       (update))
+       (let ((res (player-raise amt)))
+         ;; if res is a list then player input was defective in some
+         ;; way and we should not update the game-state.
+         (if (listp res)
+             (reply (first res))
+             (progn
+               (reply res)
+               (update)))))
       (t (reply "It's not your turn!" t)))))
 
 (defcommand allin ((plugin holdem-plugin))
@@ -136,8 +166,14 @@
       ((null *game-started*)
        (reply "There is no holdem game in progress." t))
       ((verify-next nick)
-       (reply (player-allin))
-       (update))
+       (let ((res (player-allin)))
+         ;; if res is a list then player input was defective in some
+         ;; way and we should not update the game-state.
+         (if (listp res)
+             (reply (first res))
+             (progn
+               (reply res)
+               (update)))))
       (t (reply "It's not your turn!" t)))))
 
 ;; ;;;; cl-poker
@@ -816,37 +852,37 @@ want them to win any chips, so we'll put them at the end."
 (defun player-call ()
   (let ((res (record-player-act (get-next-up) 'call *bet*)))
     (if (stringp res)
-	res
+	(list res)
 	(format t "~a has called." (pname (get-next-up))))))
 
 (defun player-raise (amt)
   (let ((res (record-player-act (get-next-up) 'raise (read-from-string amt))))
     (if (stringp res)
-        res
+        (list res)
         (format t "~a has raised the bet to ~a." (pname (get-next-up)) *bet*))))
 
 (defun player-fold ()
   (let ((res (record-player-act (get-next-up) 'fold)))
     (if (stringp res)
-	res
+	(list res)
 	(format t "~a has folded." (pname (get-next-up))))))
 
 (defun player-check ()
   (let ((res (record-player-act (get-next-up) 'check)))
     (if (stringp res)
-	res
+	(list res)
 	(format t "~a has checked." (pname (get-next-up))))))
 
 (defun player-bet (amt)
   (let ((res (record-player-act (get-next-up) 'bet (read-from-string amt))))
     (if (stringp res)
-        res
+        (list res)
         (format t "~a has bet ~a." (pname (get-next-up)) amt))))
 
 (defun player-allin ()
   (let ((res (record-player-act (get-next-up) 'allin)))
     (if (stringp res)
-	res
+	(list res)
 	(format t "~a has moved all in for ~a!" (pname (get-next-up)) *bet*))))
 
 (defun get-player (name)
