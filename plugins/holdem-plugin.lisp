@@ -19,7 +19,7 @@
        (setf *game-offered* t)
        (push (make-player player) *players*)
        (reply
-        (format nil "~a has offered a game of Texas Holdem! '!join' to join the game." player))))))
+        (format nil "~a has offered a game of Texas Holdem! '!join-holdem' to join the game." player))))))
 
 (defcommand join-holdem ((plugin holdem-plugin))
   (declare (ignore plugin))
@@ -60,6 +60,17 @@
     (setf *on-deck* nil))
   (update-game-state)
   (display-game-state))
+
+(defcommand reset-holdem ((plugin holdem-plugin))
+  (declare (ignore plugin))
+  (setf *game-offered* nil
+        *game-over* nil
+        *game-started* nil
+        *on-deck* nil
+        *sitting-out* nil
+        *winners* nil
+        *players* nil)
+  (reply "Holdem reset."))
 
 (defcommand start-holdem ((plugin holdem-plugin))
   (declare (ignore plugin))
@@ -121,7 +132,7 @@
          (if (listp res)
              (reply (first res))
              (progn
-               (reply res)
+               (reply (format nil "~a" res))
                (update)))))
       (t (reply "It's not your turn!" t)))))
 
@@ -153,7 +164,7 @@
          ;; if res is a list then player input was defective in some
          ;; way and we should not update the game-state.
          (if (listp res)
-             (reply (first res))
+             (reply (format nil "~a" res))
              (progn
                (reply res)
                (update)))))
@@ -187,6 +198,7 @@
 (defparameter *players* nil
   "Players involved in the game. A player is just popped when he goes
   broke.")
+(defparameter *hand-number* -1)
 (defparameter *board* nil
   "Community cards.")
 (defparameter *folded-chips* 0)
@@ -200,8 +212,10 @@
   the betting round is ended.")
 (defparameter *stage* 'preflop)
 (defparameter *winners* nil)
+(defparameter *stats* nil
+  "Collect stats on players.")
 
-;; ;;;; Players and seating
+;;;; Players and seating
 (defun make-player (name)
   (list
    :name name
@@ -519,9 +533,9 @@ or folded."
        (t 1)))
     ((eq act 'raise)
      (cond
-       ((= *bet* 0) "There is no bet to raise.")
-       ((< amt (* 2 *bet*)) "Your raise is too small.")
-       ((> amt (chips player)) "You don't have enough chips.")
+       ((= *bet* 0)  "There is no bet to raise.")
+       ((< amt (* 2 *bet*))  "Your raise is too small.")
+       ((> amt (chips player))  "You don't have enough chips.")
        ((option player)
 	(option player nil t)
 	1)
@@ -533,7 +547,7 @@ or folded."
       ((stringp ver)
        ver)
       ((or (eql action 'bet) (eql action 'raise))
-       (setf *bet* amt)
+       (setf *bet* (+ amt (bet player)))
        (setf *acts* 1)
        (clear-acts player)
        (bet player amt))
@@ -701,12 +715,17 @@ want them to win any chips, so we'll put them at the end."
   (cond
     ((game-over-p)
      (reply "The Game is Over!")
-     (reply (format nil "The winner is ~a! Congratulations!"
+     (reply (format nil "The winner is ~a with ~a chips! Congratulations!"
                     (name
+                     (first
+                      (remove-if #'(lambda (p) (<=(chips p) 0)) *players*)))
+                    (chips
                      (first
                       (remove-if #'(lambda (p) (<=(chips p) 0)) *players*)))))
      (setq *game-over* t))
     (t
+     (setf *hand-number* (1+ *hand-number*))
+     (reply (format nil "** Hand ~a **" *hand-number*))
      (setf *stage* 'preflop)
      ;; reset players properties
      (dolist (p *players*)
@@ -853,37 +872,37 @@ want them to win any chips, so we'll put them at the end."
   (let ((res (record-player-act (get-next-up) 'call *bet*)))
     (if (stringp res)
 	(list res)
-	(format t "~a has called." (pname (get-next-up))))))
+	(format nil "~a has called." (pname (get-next-up))))))
 
 (defun player-raise (amt)
   (let ((res (record-player-act (get-next-up) 'raise (read-from-string amt))))
     (if (stringp res)
         (list res)
-        (format t "~a has raised the bet to ~a." (pname (get-next-up)) *bet*))))
+        (format nil "~a has raised the bet to ~a." (pname (get-next-up)) *bet*))))
 
 (defun player-fold ()
   (let ((res (record-player-act (get-next-up) 'fold)))
     (if (stringp res)
 	(list res)
-	(format t "~a has folded." (pname (get-next-up))))))
+	(format nil "~a has folded." (pname (get-next-up))))))
 
 (defun player-check ()
   (let ((res (record-player-act (get-next-up) 'check)))
     (if (stringp res)
 	(list res)
-	(format t "~a has checked." (pname (get-next-up))))))
+	(format nil "~a has checked." (pname (get-next-up))))))
 
 (defun player-bet (amt)
   (let ((res (record-player-act (get-next-up) 'bet (read-from-string amt))))
     (if (stringp res)
         (list res)
-        (format t "~a has bet ~a." (pname (get-next-up)) amt))))
+        (format nil "~a has bet ~a." (pname (get-next-up)) amt))))
 
 (defun player-allin ()
   (let ((res (record-player-act (get-next-up) 'allin)))
     (if (stringp res)
 	(list res)
-	(format t "~a has moved all in for ~a!" (pname (get-next-up)) *bet*))))
+	(format nil "~a has moved all in for ~a!" (pname (get-next-up)) *bet*))))
 
 (defun get-player (name)
   (dolist (p *players*)
