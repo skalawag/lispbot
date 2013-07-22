@@ -628,7 +628,8 @@ or folded."
 	 (and (eq *stage* 'river) (stage-over-p))
 	 (< (length (get-unfolded)) 2)
 	 (null (get-next-up))
-	 (= (length (remove-allin-or-folded)) 0))
+         ;; changed this from 0 to 1.
+         (<= (length (remove-allin-or-folded)) 1))
     t))
 
 (defun game-over-p ()
