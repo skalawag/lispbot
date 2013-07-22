@@ -5,7 +5,11 @@
   :maintainer "Hans-Peter Deifel"
   :licence "GPL"
   :description "Some common plugins for the lispbot"
-  :components ((:file "roulette-plugin"
+  :components ((:file "buzz-off-plugin"
+                      :depends-on ("package"))
+               (:file "holdem-plugin"
+                      :depends-on ("package"))
+               (:file "roulette-plugin"
                       :depends-on ("package"))
                (:file "sheep-plugin"
                       :depends-on ("package"))
@@ -21,8 +25,8 @@
 		      :depends-on ("package"))
 	       (:file "remember-plugin"
 		      :depends-on ("package"))
-		   (:file "poll-plugin"
-			  :depends-on ("package"))
+               (:file "poll-plugin"
+                      :depends-on ("package"))
                (:file "info-plugin"
                       :depends-on ("package"))
 	       (:file "box-plugin"

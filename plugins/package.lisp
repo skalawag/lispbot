@@ -12,6 +12,8 @@
            :cake-plugin
            :sheep-plugin
            :roulette-plugin
+           :holdem-plugin
+           :buzz-off-plugin
 
            ;; dice plugin
            :dice-plugin
