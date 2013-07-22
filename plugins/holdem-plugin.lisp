@@ -4,7 +4,7 @@
 ;; resent hand numbering. DONE
 
 ;; when p1 has fewer chips than p2 and moves allin, and p2 calls, the
-;; star goes away. DONE (but watch this): (addressed in game-over-p)
+;; star goes away. DONE (but watch this): (addressed in hand-over-p)
 ;; commit: 890b260
 
 ;; once, when i was called by a pair of kings, and i had a pair of
@@ -642,7 +642,8 @@ or folded."
 	 (< (length (get-unfolded)) 2)
 	 (null (get-next-up))
          ;; changed this from 0 to 1.
-         (<= (length (remove-allin-or-folded)) 1))
+         (and (<= (length (remove-allin-or-folded)) 1)
+              (stage-over-p)))
     t))
 
 (defun game-over-p ()
