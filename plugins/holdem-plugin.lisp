@@ -13,6 +13,7 @@
 ;;   <pythagoras> Comm Cards: (8d 5c Jh Kh As)
 ;;   <pythagoras> skalawag has been called and shows: (Ah Th)
 ;;   <pythagoras> *Winner*: fyv holding (As Kh Jh 8d Ks) (PAIR).
+;; DONE: 1a30952 bugfix: hand evaluation of pairs.
 
 (defclass holdem-plugin (plugin)
   ()
