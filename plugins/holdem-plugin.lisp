@@ -86,7 +86,8 @@
         *on-deck* nil
         *sitting-out* nil
         *winners* nil
-        *players* nil)
+        *players* nil
+        *hand-number* -1)
   (reply "Holdem reset."))
 
 (defcommand start-holdem ((plugin holdem-plugin))
