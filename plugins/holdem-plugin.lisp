@@ -92,6 +92,16 @@
         *hand-number* -1)
   (reply "Holdem reset."))
 
+(defun rset-holdem ()
+  (setf *game-offered* nil
+        *game-over* nil
+        *game-started* nil
+        *on-deck* nil
+        *sitting-out* nil
+        *winners* nil
+        *players* nil
+        *hand-number* -1))
+
 (defcommand start-holdem ((plugin holdem-plugin))
   (declare (ignore plugin))
   (setf *game-started* t)
@@ -825,7 +835,8 @@ want them to win any chips, so we'll put them at the end."
     (reply (format nil "Community cards: ~a" *board*))))
 
 (defun show-called (called)
-  (reply (format nil "~a has been called and shows: ~a" (pname called) (getf called :hole-cards))))
+  (reply (format nil "~a has been called and shows: ~a" (pname called) (getf called :hole-cards)))
+  (reply (format nil "Community Cards: ~a" *board*)))
 
 (defun display-winners (&optional show)
   (let ((winners
@@ -891,7 +902,7 @@ want them to win any chips, so we'll put them at the end."
 	(display-winners)
 	(holdem-reset)
         (when *game-over*
-          (reset-holdem)))
+          (rset-holdem)))
        ((every #'(lambda (p) (allin p)) (get-unfolded))
         (show-down)
         (clear-line-bets)
@@ -900,7 +911,7 @@ want them to win any chips, so we'll put them at the end."
 	(display-winners t)
 	(holdem-reset)
         (when *game-over*
-          (reset-holdem)))
+          (rset-holdem)))
        (t
 	(reply (format nil "The hand is complete."))
 	(clear-line-bets)
@@ -910,7 +921,7 @@ want them to win any chips, so we'll put them at the end."
 	(display-winners t)
 	(holdem-reset)
         (when *game-over*
-          (reset-holdem))))
+          (rset-holdem)))))
     ((stage-over-p)
      (next-stage)
      (reply (format nil "*** ~a ***" *stage*))
