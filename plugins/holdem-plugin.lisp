@@ -1,8 +1,25 @@
 (in-package :lispbot.plugins)
 
+;;; FIXME:
+;; resent hand numbering.
+
+;; when p1 has fewer chips than p2 and moves allin, and p2 calls, the
+;; star goes away.
+
+;; once, when i was called by a pair of kings, and i had a pair of
+;; aces, the kings won. i don't think this is the hand evaluator, but
+;; run these through:
+;;   <pythagoras> Comm Cards: (8d 5c Jh Kh As)
+;;   <pythagoras> skalawag has been called and shows: (Ah Th)
+;;   <pythagoras> *Winner*: fyv holding (As Kh Jh 8d Ks) (PAIR).
+
 (defclass holdem-plugin (plugin)
   ()
   (:default-initargs :name "holdem"))
+
+(defcommand redisplay ((plugin holdem-plugin))
+  (declare (ignore plugin))
+  (display-game-state))
 
 (defcommand sends ((plugin holdem-plugin))
   (declare (ignore plugin))
@@ -215,6 +232,27 @@
 (defparameter *stats* nil
   "Collect stats on players.")
 
+(defun make-player-statistics (player-name)
+  (list :name player-name
+        :num-of-hands-dealt 0
+        :showdowns 0
+        :flops 0
+        :turns 0
+        :rivers 0
+        :pre-flop-raise-perc 0 ; (/ pre-flop-raise pre-flop-X-not-fold)
+        :limp-perc 0 ; (/ pre-flop-calls pre-flop-X-not-fold)
+        :folds 0
+        :pre-flop-folds 0
+        :raise/bet-then-check-perc 0 ; (/ raise/bet-then-check raise/bet-X)
+        :average-raise 0
+        :average-bet 0
+        :agressive/passive 0 ; what is an agressive player?
+        :loose/tight 0
+        :num-of-losing-calls 0
+        :num-of-winning-calls 0
+        :perc-of-hands-played 0
+        :bluff-perc 0))
+
 ;;;; Players and seating
 (defun make-player (name)
   (list
@@ -222,6 +260,7 @@
    :chips *player-chips*
    :position nil ; seat number at table
    :cards nil
+   :hole-cards nil
    :allin nil
    :bet 0
    :chips-in-pot 0
@@ -470,7 +509,8 @@ or folded."
       (let ((cards nil))
 	(push (pop deck) cards)
 	(push (pop deck) cards)
-	(setf (getf p :cards) cards)))
+	(setf (getf p :cards) cards)
+        (setf (getf p :hole-cards) (copy-list cards))))
     (setf *board* (subseq deck 0 5))))
 
 (defun post-blinds ()
@@ -774,6 +814,14 @@ want them to win any chips, so we'll put them at the end."
 	(next-up (get-player-n 12) t))
        (t (next-up (get-player-n 10) t))))))
 
+(defun show-down ()
+  (let ((players (get-unfolded)))
+    (dolist (p players)
+      (reply (format nil "~a shows: ~a" (pname p) (getf p :hole-cards))))
+    (reply (format nil "Community cards: ~a" *board*))))
+
+(defun show-called (called)
+  (reply (format nil "~a has been called and shows: ~a" (pname called) (getf called :hole-cards))))
 
 (defun display-winners (&optional show)
   (let ((winners
@@ -841,9 +889,17 @@ want them to win any chips, so we'll put them at the end."
 	(find-winners)
 	(display-winners)
 	(holdem-reset))
+       ((every #'(lambda (p) (allin p)) (get-unfolded))
+        (show-down)
+        (clear-line-bets)
+	(find-winners)
+	(payoff-players *winners*)
+	(display-winners t)
+	(holdem-reset))
        (t
 	(reply (format nil "The hand is complete."))
 	(clear-line-bets)
+        (show-called (car (remove-if #'(lambda (p) (not (or (eq (act p) 'raise) (eq (act p) 'bet)))) *players*)))
 	(find-winners)
 	(payoff-players *winners*)
 	(display-winners t)
