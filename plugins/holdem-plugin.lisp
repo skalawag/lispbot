@@ -4,7 +4,7 @@
 ;; resent hand numbering.
 
 ;; when p1 has fewer chips than p2 and moves allin, and p2 calls, the
-;; star goes away.
+;; star goes away. (addressed in game-over-p) commit: 890b260
 
 ;; once, when i was called by a pair of kings, and i had a pair of
 ;; aces, the kings won. i don't think this is the hand evaluator, but
