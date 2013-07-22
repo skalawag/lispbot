@@ -19,7 +19,7 @@
   ()
   (:default-initargs :name "holdem"))
 
-(defcommand redisplay ((plugin holdem-plugin))
+(defcommand rd ((plugin holdem-plugin))
   (declare (ignore plugin))
   (display-game-state))
 
@@ -577,12 +577,12 @@ or folded."
        (t 1)))
     ((eq act 'bet)
      (cond
-       ((> *bet* 0) "Try raising.")
        ((> amt (chips player))
 	"You don't have enough chips to do that.")
        ((and (< amt *bb*)
 	     (> (chips player) *bb*))
 	"Your bet is too small.")
+       ((> *bet* 0) (record-player-act player 'raise amt))
        (t 1)))
     ((eq act 'raise)
      (cond
@@ -592,6 +592,13 @@ or folded."
        ((option player)
 	(option player nil t)
 	1)
+       (t 1)))
+    ((eq act 'allin)
+     (cond
+       ((every
+         #'(lambda (p) (allin p))
+         (remove player (get-unfolded) :test #'equal))
+       "Try calling.")
        (t 1)))))
 
 (defun record-player-act (player action &optional amt)
@@ -777,7 +784,7 @@ want them to win any chips, so we'll put them at the end."
                     (chips
                      (first
                       (remove-if #'(lambda (p) (<=(chips p) 0)) *players*)))))
-     (setq *game-over* t))
+     (rset-holdem))
     (t
      (setf *hand-number* (1+ *hand-number*))
      (reply (format nil "** Hand ~a **" *hand-number*))
@@ -916,7 +923,8 @@ want them to win any chips, so we'll put them at the end."
        (t
 	(reply (format nil "The hand is complete."))
 	(clear-line-bets)
-        (show-called (car (remove-if #'(lambda (p) (not (or (eq (act p) 'raise) (eq (act p) 'bet)))) *players*)))
+        (when (car (remove-if #'(lambda (p) (not (or (eq (act p) 'allin) (eq (act p) 'raise) (eq (act p) 'bet)))) *players*))
+          (show-called (car (remove-if #'(lambda (p) (not (or (eq (act p) 'allin) (eq (act p) 'raise) (eq (act p) 'bet)))) *players*))))
 	(find-winners)
 	(payoff-players *winners*)
 	(display-winners t)
