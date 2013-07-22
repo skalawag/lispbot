@@ -7,7 +7,6 @@
 ;; star goes away. DONE (but watch this): (addressed in game-over-p)
 ;; commit: 890b260
 
-;;; FIXME:
 ;; once, when i was called by a pair of kings, and i had a pair of
 ;; aces, the kings won. i don't think this is the hand evaluator, but
 ;; run these through:
@@ -1178,18 +1177,18 @@ assure the kickers are in the correct order to be matched in *pair-kickers*."
 (defun major-pair-factor (n)
   (cond
     ((= n 1) 50)
-    ((= n 2) 100)
-    ((= n 3) 150)
-    ((= n 4) 200)
-    ((= n 5) 250)
-    ((= n 6) 300)
-    ((= n 7) 350)
-    ((= n 8) 400)
-    ((= n 9) 450)
-    ((= n 10) 500)
-    ((= n 11) 550)
-    ((= n 12) 600)
-    ((= n 13) 650)))
+    ((= n 2) 150)
+    ((= n 3) 250)
+    ((= n 4) 350)
+    ((= n 5) 450)
+    ((= n 6) 550)
+    ((= n 7) 650)
+    ((= n 8) 750)
+    ((= n 9) 850)
+    ((= n 10) 950)
+    ((= n 11) 1050)
+    ((= n 12) 1150)
+    ((= n 13) 1250)))
 
 (defun get-rank-or-suit (card &optional (rank t))
   "Return the rank (default) or suit of a card (if rank is nil)"
