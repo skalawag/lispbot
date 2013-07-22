@@ -887,14 +887,18 @@ want them to win any chips, so we'll put them at the end."
 				     (chips-in-pot p)) *players*))))
 	(find-winners)
 	(display-winners)
-	(holdem-reset))
+	(holdem-reset)
+        (when *game-over*
+          (reset-holdem)))
        ((every #'(lambda (p) (allin p)) (get-unfolded))
         (show-down)
         (clear-line-bets)
 	(find-winners)
 	(payoff-players *winners*)
 	(display-winners t)
-	(holdem-reset))
+	(holdem-reset)
+        (when *game-over*
+          (reset-holdem)))
        (t
 	(reply (format nil "The hand is complete."))
 	(clear-line-bets)
@@ -902,7 +906,9 @@ want them to win any chips, so we'll put them at the end."
 	(find-winners)
 	(payoff-players *winners*)
 	(display-winners t)
-	(holdem-reset))))
+	(holdem-reset)
+        (when *game-over*
+          (reset-holdem))))
     ((stage-over-p)
      (next-stage)
      (reply (format nil "*** ~a ***" *stage*))
