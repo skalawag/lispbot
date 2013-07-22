@@ -872,9 +872,6 @@ want them to win any chips, so we'll put them at the end."
 
 (defun update-game-state ()
   (cond
-    ;; FIXME: the last hand doesn't get evaluated. And I think this
-    ;; will be triggered if all but one player is all-in, even if the
-    ;; game isn't over.
     ((hand-over-p)
      (cond
        ((= (length (remove-if #'(lambda (p) (folded p)) *players*)) 1)
