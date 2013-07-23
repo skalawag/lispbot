@@ -8,10 +8,6 @@
   (declare (ignore plugin))
   (display-game-state))
 
-(defcommand sends ((plugin holdem-plugin))
-  (declare (ignore plugin))
-  (send "hello" "skalawag" (bot *last-message*)))
-
 (defcommand holdem ((plugin holdem-plugin))
   (declare (ignore plugin))
   (let ((player (nick (sender *last-message*))))
