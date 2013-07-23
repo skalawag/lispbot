@@ -1,20 +1,5 @@
 (in-package :lispbot.plugins)
 
-;;; FIXED:
-;; resent hand numbering. DONE
-
-;; when p1 has fewer chips than p2 and moves allin, and p2 calls, the
-;; star goes away. DONE (but watch this): (addressed in hand-over-p)
-;; commit: 890b260
-
-;; once, when i was called by a pair of kings, and i had a pair of
-;; aces, the kings won. i don't think this is the hand evaluator, but
-;; run these through:
-;;   <pythagoras> Comm Cards: (8d 5c Jh Kh As)
-;;   <pythagoras> skalawag has been called and shows: (Ah Th)
-;;   <pythagoras> *Winner*: fyv holding (As Kh Jh 8d Ks) (PAIR).
-;; DONE: 1a30952 bugfix: hand evaluation of pairs.
-
 (defclass holdem-plugin (plugin)
   ()
   (:default-initargs :name "holdem"))
@@ -665,15 +650,8 @@ or folded."
   (let ((players (remove-if
 		  #'(lambda (p) (folded p))
 		  (copy-list *players*)))
-	(straight-flush nil)
-	(quads nil)
-	(house nil)
-	(flush nil)
-	(straight nil)
-	(trips nil)
-	(two-pair nil)
-	(pair nil)
-	(high-card nil))
+	(straight-flush nil) (quads nil) (house nil) (flush nil) (straight nil)
+        (trips nil) (two-pair nil) (pair nil) (high-card nil))
     ;; eval each hand
     (dolist (p players)
       (cards p nil (get-best-5-card-hand
@@ -683,18 +661,19 @@ or folded."
     ;; sort the winners into hand-types
     (dolist (p *players*)
       (case (first (cards p))
-	(straight-flush (push p straight-flush))
-	(quads (push p quads))
-	(house (push p house))
-	(flush (push p flush))
-	(straight (push p straight))
-	(trips (push p trips))
-	(two-pair (push p two-pair))
-	(pair (push p pair))
+	(straight-flush (push p straight-flush)) (quads (push p quads))
+	(house (push p house)) (flush (push p flush))
+        (straight (push p straight)) (trips (push p trips))
+        (two-pair (push p two-pair)) (pair (push p pair))
 	(high-card (push p high-card))))
     ;; sort each hand type by numeric value
-    (let ((sorted-bins (mapcar #'(lambda (x) (sort x #'> :key #'(lambda (y) (third (cards y)))))
-			       (remove-if #'null (list straight-flush quads house flush straight trips two-pair pair high-card)))))
+    (let ((sorted-bins
+           (mapcar
+            #'(lambda (x)
+                (sort x #'> :key #'(lambda (y) (third (cards y)))))
+            (remove-if #'null
+                       (list straight-flush quads house flush
+                             straight trips two-pair pair high-card)))))
       (labels ((flatten-once (source)
 		 (cond
 		   ((null (cdr source)) (car source))
@@ -843,7 +822,8 @@ want them to win any chips, so we'll put them at the end."
     (reply (format nil "Community cards: ~a" *board*))))
 
 (defun show-called (called)
-  (reply (format nil "~a has been called and shows: ~a" (pname called) (getf called :hole-cards)))
+  (reply (format nil "~a has been called and shows: ~a"
+                 (pname called) (getf called :hole-cards)))
   (reply (format nil "Community Cards: ~a" *board*)))
 
 (defun display-winners (&optional show)
@@ -923,8 +903,17 @@ want them to win any chips, so we'll put them at the end."
        (t
 	(reply (format nil "The hand is complete."))
 	(clear-line-bets)
-        (when (car (remove-if #'(lambda (p) (not (or (eq (act p) 'allin) (eq (act p) 'raise) (eq (act p) 'bet)))) *players*))
-          (show-called (car (remove-if #'(lambda (p) (not (or (eq (act p) 'allin) (eq (act p) 'raise) (eq (act p) 'bet)))) *players*))))
+        (let ((tar
+               (car
+                (remove-if
+                 #'(lambda (p) (not
+                                (or
+                                 (eq (act p) 'allin)
+                                 (eq (act p) 'raise)
+                                 (eq (act p) 'bet))))
+                 *players*))))
+          (when tar
+            (show-called tar)))
 	(find-winners)
 	(payoff-players *winners*)
 	(display-winners t)
