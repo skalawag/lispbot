@@ -108,9 +108,7 @@
          ;; way and we should not update the game-state.
          (if (listp res)
              (reply (first res))
-             (progn
-               (reply res)
-               (update)))))
+             (update))))
       (t (reply "It's not your turn!" t)))))
 
 (defcommand check ((plugin holdem-plugin))
@@ -125,9 +123,7 @@
          ;; way and we should not update the game-state.
          (if (listp res)
              (reply (first res))
-             (progn
-               (reply res)
-               (update)))))
+             (update))))
       (t (reply "It's not your turn!" t)))))
 
 (defcommand call ((plugin holdem-plugin))
@@ -142,9 +138,7 @@
          ;; way and we should not update the game-state.
          (if (listp res)
              (reply (first res))
-             (progn
-               (reply (format nil "~a" res))
-               (update)))))
+             (update))))
       (t (reply "It's not your turn!" t)))))
 
 (defcommand bet ((plugin holdem-plugin) amt)
@@ -159,9 +153,7 @@
          ;; way and we should not update the game-state.
          (if (listp res)
              (reply (first res))
-             (progn
-               (reply res)
-               (update)))))
+             (update))))
       (t (reply "It's not your turn!" t)))))
 
 (defcommand raise ((plugin holdem-plugin) amt)
@@ -175,10 +167,8 @@
          ;; if res is a list then player input was defective in some
          ;; way and we should not update the game-state.
          (if (listp res)
-             (reply (format nil "~a" res))
-             (progn
-               (reply res)
-               (update)))))
+             (reply (first res))
+             (update))))
       (t (reply "It's not your turn!" t)))))
 
 (defcommand allin ((plugin holdem-plugin))
@@ -193,9 +183,7 @@
          ;; way and we should not update the game-state.
          (if (listp res)
              (reply (first res))
-             (progn
-               (reply res)
-               (update)))))
+             (update))))
       (t (reply "It's not your turn!" t)))))
 
 ;; ;;;; cl-poker
@@ -937,38 +925,32 @@ want them to win any chips, so we'll put them at the end."
 (defun player-call ()
   (let ((res (record-player-act (get-next-up) 'call *bet*)))
     (if (stringp res)
-	(list res)
-	(format nil "~a has called." (pname (get-next-up))))))
+	(list res))))
 
 (defun player-raise (amt)
   (let ((res (record-player-act (get-next-up) 'raise (read-from-string amt))))
     (if (stringp res)
-        (list res)
-        (format nil "~a has raised the bet to ~a." (pname (get-next-up)) *bet*))))
+        (list res))))
 
 (defun player-fold ()
   (let ((res (record-player-act (get-next-up) 'fold)))
     (if (stringp res)
-	(list res)
-	(format nil "~a has folded." (pname (get-next-up))))))
+	(list res))))
 
 (defun player-check ()
   (let ((res (record-player-act (get-next-up) 'check)))
     (if (stringp res)
-	(list res)
-	(format nil "~a has checked." (pname (get-next-up))))))
+	(list res))))
 
 (defun player-bet (amt)
   (let ((res (record-player-act (get-next-up) 'bet (read-from-string amt))))
     (if (stringp res)
-        (list res)
-        (format nil "~a has bet ~a." (pname (get-next-up)) amt))))
+        (list res))))
 
 (defun player-allin ()
   (let ((res (record-player-act (get-next-up) 'allin)))
     (if (stringp res)
-	(list res)
-	(format nil "~a has moved all in for ~a!" (pname (get-next-up)) *bet*))))
+	(list res))))
 
 (defun get-player (name)
   (dolist (p *players*)
