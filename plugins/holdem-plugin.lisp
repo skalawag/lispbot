@@ -484,8 +484,9 @@ or folded."
     (mapcar #'(lambda (x) (concatenate 'string (first x) (second x))) res)))
 
 (defun shuff (deck)
-  "nicked from pastebin, author unknown"
-  (do ((k (random (length deck) (make-random-state t)) (random (length deck) (make-random-state t)))
+  "adapted from something nicked from pastebin, author unknown"
+  (do ((k (random (length deck) (make-random-state t))
+          (random (length deck) (make-random-state t)))
        (result nil))
       ((null (rest deck)) (cons (first deck) result))
     (setq result (cons (nth k deck) result)
@@ -494,11 +495,8 @@ or folded."
                                      (nth k deck)
                                      deck)))))))
 
-(defun hshuffle ()
-  (shuff (make-deck)))
-
 (defun deal-cards ()
-  (let ((deck (hshuffle)))
+  (let ((deck (shuff (make-deck))))
     (dolist (p *players*)
       (let ((cards nil))
 	(push (pop deck) cards)
