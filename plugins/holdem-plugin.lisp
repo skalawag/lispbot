@@ -920,7 +920,7 @@ want them to win any chips, so we'll put them at the end."
     (t
      (set-next-up))))
 
-;; ;;; game actions
+;;; game actions
 
 (defun player-call ()
   (let ((res (record-player-act (get-next-up) 'call *bet*)))
