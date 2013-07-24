@@ -211,29 +211,6 @@
   the betting round is ended.")
 (defparameter *stage* 'preflop)
 (defparameter *winners* nil)
-(defparameter *stats* nil
-  "Collect stats on players.")
-
-(defun make-player-statistics (player-name)
-  (list :name player-name
-        :num-of-hands-dealt 0
-        :showdowns 0
-        :flops 0
-        :turns 0
-        :rivers 0
-        :pre-flop-raise-perc 0 ; (/ pre-flop-raise pre-flop-X-not-fold)
-        :limp-perc 0 ; (/ pre-flop-calls pre-flop-X-not-fold)
-        :folds 0
-        :pre-flop-folds 0
-        :raise/bet-then-check-perc 0 ; (/ raise/bet-then-check raise/bet-X)
-        :average-raise 0
-        :average-bet 0
-        :agressive/passive 0 ; what is an agressive player?
-        :loose/tight 0
-        :num-of-losing-calls 0
-        :num-of-winning-calls 0
-        :perc-of-hands-played 0
-        :bluff-perc 0))
 
 ;;;; Players and seating
 (defun make-player (name)
