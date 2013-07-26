@@ -134,8 +134,6 @@
        (reply "There is no holdem game in progress." t))
       ((verify-next nick)
        (let ((res (player-call)))
-         ;; if res is a list then player input was defective in some
-         ;; way and we should not update the game-state.
          (if (listp res)
              (reply (first res))
              (update))))
@@ -897,37 +895,43 @@ want them to win any chips, so we'll put them at the end."
     (t
      (set-next-up))))
 
-;;; game actions
+;;; game actions (these are pretty much superflous in this context)
 
 (defun player-call ()
   (let ((res (record-player-act (get-next-up) 'call *bet*)))
     (if (stringp res)
-	(list res))))
+	(list res)
+        t)))
 
 (defun player-raise (amt)
   (let ((res (record-player-act (get-next-up) 'raise (read-from-string amt))))
     (if (stringp res)
-        (list res))))
+        (list res)
+        t)))
 
 (defun player-fold ()
   (let ((res (record-player-act (get-next-up) 'fold)))
     (if (stringp res)
-	(list res))))
+	(list res)
+        t)))
 
 (defun player-check ()
   (let ((res (record-player-act (get-next-up) 'check)))
     (if (stringp res)
-	(list res))))
+	(list res)
+        t)))
 
 (defun player-bet (amt)
   (let ((res (record-player-act (get-next-up) 'bet (read-from-string amt))))
     (if (stringp res)
-        (list res))))
+        (list res)
+        t)))
 
 (defun player-allin ()
   (let ((res (record-player-act (get-next-up) 'allin)))
     (if (stringp res)
-	(list res))))
+	(list res)
+        t)))
 
 (defun get-player (name)
   (dolist (p *players*)
