@@ -524,7 +524,6 @@ or folded."
        ((and (< amt *bb*)
 	     (> (chips player) *bb*))
 	"Your bet is too small.")
-       ((> *bet* 0) (record-player-act player 'raise amt))
        (t 1)))
     ((eq act 'raise)
      (cond
