@@ -819,6 +819,7 @@ want them to win any chips, so we'll put them at the end."
   (reply (format nil "Pot: ~a" (pot-total)))
   (reply (format nil "~5a ~10a ~4a ~5a ~4a ~5a ~3a ~3a" "Seat" "Name" "Nxt" "Chips" "Bet" "Act" "Fld" "Opt"))
   (dolist (p *players*)
+    (sleep .1)
     (reply (format nil "~5a ~10a ~4a ~5a ~4a ~5a ~3a ~3a"
 	    (seat p)
             (pname p)
