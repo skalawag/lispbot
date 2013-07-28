@@ -1,5 +1,7 @@
 (in-package :lispbot.plugins)
 
+(load "/home/waglin/lisp/lispbot/plugins/hand-evaluator.lisp")
+
 (defclass holdem-plugin (plugin)
   ()
   (:default-initargs :name "holdem"))
