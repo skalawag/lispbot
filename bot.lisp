@@ -337,7 +337,8 @@ new command."
              (typecase arg
                (string (string= (name plugin) arg))
                (t (eq arg (type-of plugin))))))
-    (let ((blacklisted (or (eq blacklist :all) (find-if #'is-plugin blacklist)))
+    (let ((blacklisted (or (member :all blacklist)
+                           (find-if #'is-plugin blacklist)))
           (whitelisted (find-if #'is-plugin whitelist)))
       (or (not blacklisted) whitelisted))))
 
