@@ -35,3 +35,6 @@
 (defcommand raise ((plugin texas-holdem-plugin) amt)
   (declare (ignore plugin))
   nil)
+
+(defun display ()
+  nil)
