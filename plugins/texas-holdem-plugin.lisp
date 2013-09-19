@@ -10,7 +10,21 @@
 
 (defcommand holdem ((plugin texas-holdem-plugin))
   (declare (ignore plugin))
-  nil)
+  (let ((player (nick (sender *last-message*))))
+    (cond
+      (*game-started*
+       (reply "A holdem game has already been started!" t))
+      (t
+       (setf *players* nil
+             *game-started* t
+             *bets* nil
+             *prev-bets* nil
+             *hand-number* 0
+             *community-cards* nil
+             *stage* "Pre-Flop")
+       (push (make-player player) *players*)
+       (reply
+        (format nil "~a has offered a game of Texas Holdem! 'Use !join-holdem' to join the game."  player))))))
 
 (defcommand join-holdem ((plugin texas-holdem-plugin))
   (declare (ignore plugin))
