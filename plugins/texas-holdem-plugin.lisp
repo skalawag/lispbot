@@ -48,7 +48,7 @@
   nil)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;; Poker
+;;;; Global variables
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defparameter *debug* nil)
@@ -91,6 +91,10 @@
 (defparameter *small-blind* 5)
 
 (defparameter *big-blind* 10)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; Poker
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defclass player ()
   ((player-name :initarg :name :reader pname)
@@ -698,7 +702,7 @@ given pair."
 
 (defun combinations (m list)
   "Find all m-sized combinations from list. Nicked this from
-somewhere, but I can't recall where...:/"
+somewhere (pastebin? stackoverflow?), but I can't recall where...:/"
   (let ((res nil))
     (labels ((comb1 (l c m)
 	       (when (>= (length l) m)
