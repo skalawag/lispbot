@@ -24,7 +24,7 @@
              *stage* "Pre-Flop")
        (push (make-player player) *players*)
        (reply
-        (format nil "~a has offered a game of Texas Holdem! 'Use !join-holdem' to join the game."  player))))))
+        (format nil "~a has offered a game of Texas Holdem! Use '!join-holdem' to join the game."  player))))))
 
 (defcommand join-holdem ((plugin texas-holdem-plugin))
   (declare (ignore plugin))
