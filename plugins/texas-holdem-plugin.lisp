@@ -14,7 +14,18 @@
 
 (defcommand start-holdem ((plugin texas-holdem-plugin))
   (declare (ignore plugin))
-  nil)
+  (let ((player (nick (sender *last-message*)))
+        (already-joined (mapcar #'pname *players*)))
+    (cond
+      ((member player already-joined :test #'string=)
+       (reply "You are already in the game!" t))
+      (*game-started*
+       (reply "A game is in progress." t))
+      (t
+       (push (make-player player) *players*)
+       (reply (format nil "~a has joined Texas Holdem!" player))
+       (reply (format nil "There are ~a players in the game. Anyone else?"
+                      (length *players*)))))))
 
 (defcommand join-holdem ((plugin texas-holdem-plugin))
   (declare (ignore plugin))
@@ -52,6 +63,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defparameter *debug* nil)
+
+(defparameter *game-started* nil)
 
 (defparameter *hand-number* 0)
 
