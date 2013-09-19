@@ -12,7 +12,7 @@
   (declare (ignore plugin))
   nil)
 
-(defcommand start-holdem ((plugin texas-holdem-plugin))
+(defcommand join-holdem ((plugin texas-holdem-plugin))
   (declare (ignore plugin))
   (let ((player (nick (sender *last-message*)))
         (already-joined (mapcar #'pname *players*)))
@@ -27,7 +27,7 @@
        (reply (format nil "There are ~a players in the game. Anyone else?"
                       (length *players*)))))))
 
-(defcommand join-holdem ((plugin texas-holdem-plugin))
+(defcommand start-holdem ((plugin texas-holdem-plugin))
   (declare (ignore plugin))
   nil)
 
