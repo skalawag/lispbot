@@ -4,34 +4,34 @@
   ()
   (:default-initargs :name "texas-holdem"))
 
-(defcommand holdem ((plugin poker-plugin))
+(defcommand holdem ((plugin texas-holdem-plugin))
   (declare (ignore plugin))
   nil)
 
-(defcommand start-holdem ((plugin poker-plugin))
+(defcommand start-holdem ((plugin texas-holdem-plugin))
   (declare (ignore plugin))
   nil)
 
-(defcommand join-holdem ((plugin poker-plugin))
+(defcommand join-holdem ((plugin texas-holdem-plugin))
   (declare (ignore plugin))
   nil)
 
-(defcommand fold ((plugin poker-plugin))
+(defcommand fold ((plugin texas-holdem-plugin))
   (declare (ignore plugin))
   nil)
 
-(defcommand call ((plugin poker-plugin))
+(defcommand call ((plugin texas-holdem-plugin))
   (declare (ignore plugin))
   nil)
 
-(defcommand check ((plugin poker-plugin))
+(defcommand check ((plugin texas-holdem-plugin))
   (declare (ignore plugin))
   nil)
 
-(defcommand bet ((plugin poker-plugin) amt)
+(defcommand bet ((plugin texas-holdem-plugin) amt)
   (declare (ignore plugin))
   nil)
 
-(defcommand raise ((plugin poker-plugin) amt)
+(defcommand raise ((plugin texas-holdem-plugin) amt)
   (declare (ignore plugin))
   nil)
