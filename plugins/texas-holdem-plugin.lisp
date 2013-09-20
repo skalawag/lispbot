@@ -73,7 +73,7 @@
 
 (defcommand check ((plugin texas-holdem-plugin))
   (declare (ignore plugin))
-  (make-act 'check)
+  (make-act 'check))
 
 (defcommand bet ((plugin texas-holdem-plugin) amt)
   (declare (ignore plugin))
