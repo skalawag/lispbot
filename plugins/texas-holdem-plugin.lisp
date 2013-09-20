@@ -27,7 +27,7 @@
        (reply (format nil "Use '!join-holdem' to join the game."))))))
 
 (defun is-player-p (someone)
-  (member someone (mapcar #'pname *players* :test #'string=)))
+  (member someone (mapcar #'pname *players*) :test #'string=))
 
 (defcommand join-holdem ((plugin texas-holdem-plugin))
   (declare (ignore plugin))
@@ -329,7 +329,7 @@ the betting-round is over."
 
 (defun deal-cards ()
   (let ((cards
-	 (subseq (shuffle) 0 (+ (* 2 (length *players*)) 5))))
+	 (subseq (hshuffle) 0 (+ (* 2 (length *players*)) 5))))
     (dolist (p *players*)
       (setf (pockets p)
 	    (list
@@ -534,7 +534,7 @@ the betting-round is over."
                                      (nth k deck)
                                      deck)))))))
 
-(defun shuffle ()
+(defun hshuffle ()
   (shuff (make-deck)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
