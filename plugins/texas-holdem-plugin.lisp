@@ -23,15 +23,18 @@
              *community-cards* nil
              *stage* "Pre-Flop")
        (push (make-player player) *players*)
-       (reply
-        (format nil "~a has offered a game of Texas Holdem! Use '!join-holdem' to join the game."  player))))))
+       (reply (format nil "~a has offered a game of Texas Holdem!" player))
+       (reply (format nil "Use '!join-holdem' to join the game."))))))
+
+(defun is-player-p (someone)
+  (member someone (mapcar #'pname *players* :test #'string=)))
 
 (defcommand join-holdem ((plugin texas-holdem-plugin))
   (declare (ignore plugin))
   (let ((player (nick (sender *last-message*)))
         (already-joined (mapcar #'pname *players*)))
     (cond
-      ((member player already-joined :test #'string=)
+      ((is-player-p player)
        (reply "You are already in the game!" t))
       ;; FIXME: it should be possible to join a game in progress.
       (*game-started*
@@ -44,27 +47,45 @@
 
 (defcommand start-holdem ((plugin texas-holdem-plugin))
   (declare (ignore plugin))
-  nil)
+  (when (and (> (length *players*) 1)
+             (is-player-p (nick (sender *last-message*))))
+    (reply "Texas Holdem has begun.")
+    (display)))
+
+(defun get-player (name)
+  (dolist (p *players*)
+    (when (string= name (pname p))
+      (return p))))
 
 (defcommand fold ((plugin texas-holdem-plugin))
   (declare (ignore plugin))
-  nil)
+  (when (string= (pname (get-acting *players*)) (nick (sender *last-message*)))
+    (handle-player-action (get-player (nick (sender *last-message*))) 'fold)
+    (display)))
 
 (defcommand call ((plugin texas-holdem-plugin))
   (declare (ignore plugin))
-  nil)
+  (when (string= (pname (get-acting *players*)) (nick (sender *last-message*)))
+    (handle-player-action (get-player (nick (sender *last-message*))) 'call)
+    (display)))
 
 (defcommand check ((plugin texas-holdem-plugin))
   (declare (ignore plugin))
-  nil)
+  (when (string= (pname (get-acting *players*)) (nick (sender *last-message*)))
+    (handle-player-action (get-player (nick (sender *last-message*))) 'check)
+    (display)))
 
 (defcommand bet ((plugin texas-holdem-plugin) amt)
   (declare (ignore plugin))
-  nil)
+  (when (string= (pname (get-acting *players*)) (nick (sender *last-message*)))
+    (handle-player-action (get-player (nick (sender *last-message*))) 'bet amt)
+    (display)))
 
 (defcommand raise ((plugin texas-holdem-plugin) amt)
   (declare (ignore plugin))
-  nil)
+  (when (string= (pname (get-acting *players*)) (nick (sender *last-message*)))
+    (handle-player-action (get-player (nick (sender *last-message*))) 'raise amt)
+    (display)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; Display
