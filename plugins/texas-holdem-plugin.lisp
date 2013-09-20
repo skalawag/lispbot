@@ -266,6 +266,9 @@ the betting-round is over."
 				    (get-unfolded *players*)))
 		 2)) t)))
 
+(defun game-over? ()
+  (when (< (length *players*) 2) t))
+
 (defun compute-pot (prev-bets bets)
   (let ((res nil))
     (dolist (pb prev-bets)
