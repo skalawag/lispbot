@@ -91,8 +91,54 @@
 ;;;; Display
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun display ()
-  nil)
+(defun community-cards ()
+  (cond
+    ((string= *stage* "Pre-Flop") "X X X X X")
+    ((string= *stage* "Flop") (format nil "~a ~a ~a X X"
+				      (first *community-cards*)
+				      (second *community-cards*)
+				      (third *community-cards*)))
+    ((string= *stage* "Turn") (format nil "~a ~a ~a ~a X"
+				      (first *community-cards*)
+				      (second *community-cards*)
+				      (third *community-cards*)
+				      (fourth *community-cards*)))
+    ((string= *stage* "River") (format nil "~a ~a ~a ~a ~a"
+				      (first *community-cards*)
+				      (second *community-cards*)
+				      (third *community-cards*)
+				      (fourth *community-cards*)
+				      (fifth *community-cards*)))))
+
+(defun seating-format-values ()
+  (let ((n (- (length *players*) 3))
+	(res (list "[sb]" "[bb]")))
+    (dotimes (i n)
+      (setf res (append res (list (+ i 3)))))
+    (append res (list "[d]"))))
+
+(defun display-game-state ()
+  (let ((seats (seating-format-values)))
+    (reply (format nil "Stage: ~a   Pot: ~a  Hand: ~a"
+                   *stage*
+                   (compute-pot *prev-bets* *bets*)
+                   *hand-number*))
+    (sleep .5)
+    (reply (format nil "Community Cards: ~a" (community-cards)))
+    (sleep .5)
+    (reply (format nil "~5a ~10a ~4a ~7a ~4a ~3a~%"
+                   "Seat" "Name" "Nxt" "Chips" "Bet" "Fld"))
+    (sleep .5)
+    (dolist (p *players*)
+      (sleep .5)
+      (format t "~5a ~10a ~4a ~7a ~4a ~3a~%"
+              (pop seats)
+              (pname p)
+              (if (acting p) "*" "")
+              (chips p)
+              ;; not sure how best to fix this yet.
+              (if (null (get-bet p *bets*)) 0 (get-bet p *bets*))
+              (if (folded p) (folded p) "--")))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; Global variables
