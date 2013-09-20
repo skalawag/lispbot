@@ -50,7 +50,7 @@
   (when (and (> (length *players*) 1)
              (is-player-p (nick (sender *last-message*))))
     (reply "Texas Holdem has begun.")
-    (display)))
+    (display-game-state)))
 
 (defun get-player (name)
   (dolist (p *players*)
@@ -61,31 +61,36 @@
   (declare (ignore plugin))
   (when (string= (pname (get-acting *players*)) (nick (sender *last-message*)))
     (handle-player-action (get-player (nick (sender *last-message*))) 'fold)
-    (display)))
+    (advance-game)
+    (display-game-state)))
 
 (defcommand call ((plugin texas-holdem-plugin))
   (declare (ignore plugin))
   (when (string= (pname (get-acting *players*)) (nick (sender *last-message*)))
     (handle-player-action (get-player (nick (sender *last-message*))) 'call)
-    (display)))
+    (advance-game)
+    (display-game-state)))
 
 (defcommand check ((plugin texas-holdem-plugin))
   (declare (ignore plugin))
   (when (string= (pname (get-acting *players*)) (nick (sender *last-message*)))
     (handle-player-action (get-player (nick (sender *last-message*))) 'check)
-    (display)))
+    (advance-game)
+    (display-game-state)))
 
 (defcommand bet ((plugin texas-holdem-plugin) amt)
   (declare (ignore plugin))
   (when (string= (pname (get-acting *players*)) (nick (sender *last-message*)))
     (handle-player-action (get-player (nick (sender *last-message*))) 'bet amt)
-    (display)))
+    (advance-game)
+    (display-game-state)))
 
 (defcommand raise ((plugin texas-holdem-plugin) amt)
   (declare (ignore plugin))
   (when (string= (pname (get-acting *players*)) (nick (sender *last-message*)))
     (handle-player-action (get-player (nick (sender *last-message*))) 'raise amt)
-    (display)))
+    (advance-game)
+    (display-game-state)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; Display
@@ -139,6 +144,15 @@
               ;; not sure how best to fix this yet.
               (if (null (get-bet p *bets*)) 0 (get-bet p *bets*))
               (if (folded p) (folded p) "--")))))
+
+(defun display-winners (winners)
+  (reply (format nil "The winners of hand ~a are:" *hand-number*))
+  (dolist (w winners)
+    (sleep .5)
+    (reply (format nil "~a: ~a  Holding: ~a"
+                   (pname w)
+                   (best-hand w)
+                   (pockets w)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; Global variables
@@ -503,11 +517,9 @@ the betting-round is over."
        (let ((winners (get-winners *players*)))
 	 (calculate-player-payouts winners *players* *bets* *prev-bets*)
 	 (credit-payouts *players*)
-	 ;; announce/display winners
+	 (display-winners winners)
 	 (reset-hand)))
-      (t (clean-up-and-advance-stage))))
-  ;; announce/display game-state.
-)
+      (t (clean-up-and-advance-stage)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; Cards
