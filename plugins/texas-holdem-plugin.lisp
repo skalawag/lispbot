@@ -58,10 +58,10 @@
       (return p))))
 
 (defmacro make-act (act &optional amt)
-  (when (string= (pname (get-acting *players*)) (nick (sender *last-message*)))
-    (handle-player-action (get-player (nick (sender *last-message*))) ,act ,amt)
-    (advance-game)
-    (display-game-state)))
+  `(when (string= (pname (get-acting *players*)) (nick (sender *last-message*)))
+     (handle-player-action (get-player (nick (sender *last-message*))) ,act ,amt)
+     (advance-game)
+     (display-game-state)))
 
 (defcommand fold ((plugin texas-holdem-plugin))
   (declare (ignore plugin))
