@@ -642,7 +642,7 @@ hand."
 
 ;; these functions assign an integer to each hand based on its type
 ;; and strength, including any kickers. since the stronger of any
-;; hands always has a higher values, comparison of hands is very easy.
+;; hands always has a higher value, comparison of hands is very easy.
 
 (defun high-card-rank (hand)
   "Return the high-card-rank of a given hand."
