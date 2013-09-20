@@ -57,40 +57,31 @@
     (when (string= name (pname p))
       (return p))))
 
-(defcommand fold ((plugin texas-holdem-plugin))
-  (declare (ignore plugin))
+(defmacro make-act (act &optional amt)
   (when (string= (pname (get-acting *players*)) (nick (sender *last-message*)))
-    (handle-player-action (get-player (nick (sender *last-message*))) 'fold)
+    (handle-player-action (get-player (nick (sender *last-message*))) ,act ,amt)
     (advance-game)
     (display-game-state)))
+
+(defcommand fold ((plugin texas-holdem-plugin))
+  (declare (ignore plugin))
+  (make-act 'fold))
 
 (defcommand call ((plugin texas-holdem-plugin))
   (declare (ignore plugin))
-  (when (string= (pname (get-acting *players*)) (nick (sender *last-message*)))
-    (handle-player-action (get-player (nick (sender *last-message*))) 'call)
-    (advance-game)
-    (display-game-state)))
+  (make-act 'call))
 
 (defcommand check ((plugin texas-holdem-plugin))
   (declare (ignore plugin))
-  (when (string= (pname (get-acting *players*)) (nick (sender *last-message*)))
-    (handle-player-action (get-player (nick (sender *last-message*))) 'check)
-    (advance-game)
-    (display-game-state)))
+  (make-act 'check)
 
 (defcommand bet ((plugin texas-holdem-plugin) amt)
   (declare (ignore plugin))
-  (when (string= (pname (get-acting *players*)) (nick (sender *last-message*)))
-    (handle-player-action (get-player (nick (sender *last-message*))) 'bet amt)
-    (advance-game)
-    (display-game-state)))
+  (make-act 'bet amt))
 
 (defcommand raise ((plugin texas-holdem-plugin) amt)
   (declare (ignore plugin))
-  (when (string= (pname (get-acting *players*)) (nick (sender *last-message*)))
-    (handle-player-action (get-player (nick (sender *last-message*))) 'raise amt)
-    (advance-game)
-    (display-game-state)))
+  (make-act 'raise amt))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; Display
