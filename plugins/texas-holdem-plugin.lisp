@@ -89,6 +89,12 @@
 ;;;; Display
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;;; tell each player his cards
+(defun announce-pocket-cards ()
+  (dolist (p *players*)
+    (send
+     (format nil "Your cards: ~a" (pockets p)) (pname p) (bot *last-message*))))
+
 (defun community-cards ()
   (cond
     ((string= *stage* "Pre-Flop") "X X X X X")
