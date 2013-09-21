@@ -52,6 +52,11 @@
     (reply "Texas Holdem has begun.")
     (display-game-state)))
 
+(defcommand rd ((plugin texas-holdem-plugin))
+  "Redraw the display manually when it gets stuck."
+  (declare (ignore plugin))
+  (display-game-state))
+
 (defun get-player (name)
   (dolist (p *players*)
     (when (string= name (pname p))
