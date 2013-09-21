@@ -36,9 +36,6 @@
     (cond
       ((is-player-p player)
        (reply "You are already in the game!" t))
-      ;; FIXME: it should be possible to join a game in progress.
-      (*game-started*
-       (reply "A game is in progress." t))
       (t
        (push (make-player player) *players*)
        (reply (format nil "~a has joined Texas Holdem!" player))
