@@ -47,6 +47,7 @@
   (when (and (> (length *players*) 1)
              (is-player-p (nick (sender *last-message*))))
     (reply "Texas Holdem has begun.")
+    (reset-hand)
     (display-game-state)))
 
 (defcommand rd ((plugin texas-holdem-plugin))
