@@ -129,14 +129,14 @@
     (sleep .5)
     (dolist (p *players*)
       (sleep .5)
-      (format t "~5a ~10a ~4a ~7a ~4a ~3a~%"
+      (reply (format nil "~5a ~10a ~4a ~7a ~4a ~3a~%"
               (pop seats)
               (pname p)
               (if (acting p) "*" "")
               (chips p)
               ;; not sure how best to fix this yet.
               (if (null (get-bet p *bets*)) 0 (get-bet p *bets*))
-              (if (folded p) (folded p) "--")))))
+              (if (folded p) (folded p) "--"))))))
 
 (defun display-winners (winners)
   (reply (format nil "The winners of hand ~a are:" *hand-number*))
