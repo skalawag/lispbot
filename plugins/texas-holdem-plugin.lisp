@@ -31,8 +31,7 @@
 
 (defcommand join-holdem ((plugin texas-holdem-plugin))
   (declare (ignore plugin))
-  (let ((player (nick (sender *last-message*)))
-        (already-joined (mapcar #'pname *players*)))
+  (let ((player (nick (sender *last-message*))))
     (cond
       ((is-player-p player)
        (reply "You are already in the game!" t))
@@ -97,7 +96,6 @@
     (advance-game)
     (display-game-state)))
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; Display
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -106,7 +104,8 @@
 (defun announce-pocket-cards ()
   (dolist (p *players*)
     (send
-     (format nil "Your cards: ~a" (pockets p)) (pname p) (bot *last-message*))))
+     (format nil "Hand ~a: ~a" *hand-number* (pockets p))
+     (pname p) (bot *last-message*))))
 
 (defun community-cards ()
   (cond
