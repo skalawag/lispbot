@@ -60,31 +60,43 @@
     (when (string= name (pname p))
       (return p))))
 
-(defmacro make-act (act &optional amt)
-  `(when (string= (pname (get-acting *players*)) (nick (sender *last-message*)))
-     (handle-player-action (get-player (nick (sender *last-message*))) ,act ,amt)
-     (advance-game)
-     (display-game-state)))
-
 (defcommand fold ((plugin texas-holdem-plugin))
   (declare (ignore plugin))
-  (make-act 'fold))
+  (when (string= (pname (get-acting *players*)) (nick (sender *last-message*)))
+    (handle-player-action (get-player (nick (sender *last-message*))) 'fold)
+    (advance-game)
+    (display-game-state)))
 
 (defcommand call ((plugin texas-holdem-plugin))
   (declare (ignore plugin))
-  (make-act 'call))
+  (when (string= (pname (get-acting *players*)) (nick (sender *last-message*)))
+    (handle-player-action (get-player (nick (sender *last-message*))) 'call)
+    (advance-game)
+    (display-game-state)))
 
 (defcommand check ((plugin texas-holdem-plugin))
   (declare (ignore plugin))
-  (make-act 'check))
+  (when (string= (pname (get-acting *players*)) (nick (sender *last-message*)))
+    (handle-player-action (get-player (nick (sender *last-message*))) 'check)
+    (advance-game)
+    (display-game-state)))
 
 (defcommand bet ((plugin texas-holdem-plugin) amt)
   (declare (ignore plugin))
-  (make-act 'bet amt))
+  (when (string= (pname (get-acting *players*)) (nick (sender *last-message*)))
+    (handle-player-action
+     (get-player (nick (sender *last-message*))) 'bet (read-from-string amt))
+    (advance-game)
+    (display-game-state)))
 
 (defcommand raise ((plugin texas-holdem-plugin) amt)
   (declare (ignore plugin))
-  (make-act 'raise amt))
+  (when (string= (pname (get-acting *players*)) (nick (sender *last-message*)))
+    (handle-player-action
+     (get-player (nick (sender *last-message*))) 'raise (read-from-string amt))
+    (advance-game)
+    (display-game-state)))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; Display
