@@ -229,6 +229,13 @@
 
 (defparameter *big-blind* 10)
 
+(defun post-game-cleanup ()
+  (setf *game-started* nil
+        *game-over* nil
+        *players* nil
+        *bets* nil
+        *prev-bets* nil))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; Poker
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
