@@ -8,6 +8,23 @@
 ;;;; Plugin Commands
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defcommand holdem-help ((plugin texas-holdem-plugin))
+  "FIXME: This is not the lispbot way to supply help."
+  (declare (ignore plugin))
+  (reply "Available commands for Texas Holdem:")
+  (sleep .5)
+  (reply "holdem: initiate a game of holdem")
+  (sleep .5)
+  (reply "join-holdem: join a game of holdem")
+  (sleep .5)
+  (reply "start-holdem: start the game once all the players have joined.")
+  (sleep .5)
+  (reply "rd: redraw the game state if it gets stuck.")
+  (sleep .5)
+  (reply "new: manually reset the game to a fresh state.")
+  (sleep .5)
+  (reply "fold | check | call | bet AMT | raise AMT | allin: poker actions"))
+
 (defcommand holdem ((plugin texas-holdem-plugin))
   (declare (ignore plugin))
   (let ((player (nick (sender *last-message*))))
