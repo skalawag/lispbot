@@ -55,7 +55,7 @@
       (t
        (push (make-player player) *players*)
        (reply (format nil "~a has joined Texas Holdem!" player))
-       (reply (format nil "There are ~a players in the game. Anyone else?"
+       (reply (format nil "There are ~a players in the game. Anyone else? If not, use '!start-holdem' to begin the game."
                       (length *players*)))))))
 
 (defcommand start-holdem ((plugin texas-holdem-plugin))
