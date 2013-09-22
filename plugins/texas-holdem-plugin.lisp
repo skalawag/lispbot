@@ -190,6 +190,8 @@
 
 (defparameter *game-started* nil)
 
+(defparameter *game-over* nil)
+
 (defparameter *hand-number* 0)
 
 (defparameter *prev-bets* nil
