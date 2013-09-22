@@ -254,6 +254,8 @@
   checked. So, once the first player in the round has checked, this is
   set to nil.")
 
+(defparameter *option-exercised* nil)
+
 (defparameter *starting-chips* 1000)
 
 (defparameter *small-blind* 5)
