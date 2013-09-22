@@ -170,7 +170,9 @@
               (if (acting p) "*" "")
               (chips p)
               ;; not sure how best to fix this yet.
-              (if (null (get-bet p *bets*)) 0 (get-bet p *bets*))
+              (if (null (get-bet-for-display p *bets*))
+                  0
+                  (get-bet-for-display p *bets*))
               (if (folded p) (folded p) "--"))))))
 
 (defun display-winners (winners)
