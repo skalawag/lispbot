@@ -290,8 +290,8 @@
 (defun update-player-in-bets (player-bet bet-list)
   (append
    (list (car bet-list))
-   (remove-if #'(lambda (y) (equal y (car player-bet)))
-	      (cdr bet-list) :key #'(lambda (x) (car x)))
+   (remove-if #'(lambda (y) (equal (car y) (car player-bet)))
+	      (cdr bet-list))
    (list player-bet)))
 
 (defun handle-player-action (player action &optional amt)
