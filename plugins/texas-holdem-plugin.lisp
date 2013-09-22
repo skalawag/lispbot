@@ -541,7 +541,7 @@ the betting-round is over."
 
 (defun advance-game ()
   (advance-acting *players*)
-  (when (betting-round-over? *players*)
+  (when (betting-round-over? (get-acting *players*))
     (cond
       ((hand-over?)
        (eval-hands *players*)
