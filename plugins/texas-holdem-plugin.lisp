@@ -377,7 +377,8 @@
        (set-player-flag player)
        (setf *first-check* nil)))
     ((eq action 'call)
-     ;; in order to give the big blind an option, have to move the flag
+     ;; FIXME: this is broken now, because with two players, there
+     ;; will only be two elements in the cdr of *bets*
      (when (and (string= *stage* "Pre-Flop") (= (length (cdr *bets*)) 2))
        (set-player-flag player))
      (call player))
