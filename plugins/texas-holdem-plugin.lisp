@@ -264,8 +264,9 @@
   (setf *game-started* nil
         *game-over* nil
         *players* nil
-        *bets* nil
+        *option-exercised* nil
         *hand-number* 0
+        *bets* nil
         *prev-bets* nil))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
