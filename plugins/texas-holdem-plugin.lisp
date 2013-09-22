@@ -265,6 +265,7 @@
         *game-over* nil
         *players* nil
         *bets* nil
+        *hand-number* 0
         *prev-bets* nil))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -410,13 +411,14 @@ the betting-round is over."
 
 (defun betting-round-over? (player)
   "duh: pot-is-good might obviate the need for set-player-flag."
-  (pot-is-good?))
+  (or (and (string/= *stage* "Pre-Flop") (pot-is-good?)) (flag player)))
 
 (defun pot-is-good? ()
   (let ((res t))
     (dolist (p *players*)
       (if (not (or (= (chips p) 0)
-                   (= (get-bet-for-display p *bets*) (car *bets*))))
+                   (= (get-bet-for-display p *bets*)
+                      (if (car *bets*) (car *bets*) -1))))
           (setf res nil)))
     res))
 
