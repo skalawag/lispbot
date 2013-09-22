@@ -643,7 +643,7 @@ get-bet does. NOTE: I think I can dispense with this now."
 
 (defun advance-game ()
   (advance-acting *players*)
-  (when (betting-round-over? (get-acting *players*))
+  (when (betting-round-over?)
     (cond
       ((hand-over?)
        (eval-hands *players*)
