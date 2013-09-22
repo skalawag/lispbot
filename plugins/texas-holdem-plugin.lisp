@@ -653,7 +653,8 @@ get-bet does. NOTE: I think I can dispense with this now."
     (mapcar #'(lambda (x) (concatenate 'string (first x) (second x))) res)))
 
 (defun shuff (deck)
-  "nicked from pastebin, author unknown"
+  "nicked from pastebin, author unknown. not needed, since alexandria
+has a shuffle function."
   (do ((k (random (length deck)) (random (length deck)))
        (result nil))
       ((null (rest deck)) (cons (first deck) result))
