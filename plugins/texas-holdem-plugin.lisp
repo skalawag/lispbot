@@ -342,17 +342,27 @@ the betting-round is over."
   (setf (flag player) t))
 
 (defun betting-round-over? (player)
-  "When getting the next player to act, check his flag. If it is true,
-  then he was the original bettor (or the last raiser) and no one has
-  reraised; the round is over."
-  (when (flag player) t))
+  "duh: pot-is-good might obviate the need for set-player-flag."
+  (pot-is-good?))
+  ;; (when (or (eq (flag player) t)
+  ;;           (= (length (remove-if #'(lambda (p) (= (chips p) 0)) *players*)) 0))
+  ;;           t))
+
+(defun pot-is-good? ()
+  (let ((res t))
+    (dolist (p *players*)
+      (if (not (or (= (chips p) 0)
+                   (= (get-bet-for-display p *bets*) (car *bets*))))
+          (setf res nil)))
+    res))
 
 (defun hand-over? ()
   (let ((acting (get-acting *players*)))
     (when (or (and (eq (flag acting) t) (string= *stage* "River"))
-	      (< (length (remove-if #'(lambda (p) (= (chips p) 0))
-				    (get-unfolded *players*)))
-		 2)) t)))
+              (and (pot-is-good?)
+                   (< (length (remove-if #'(lambda (p) (= (chips p) 0))
+                                         (get-unfolded *players*)))
+		 2))) t)))
 
 (defun game-over? ()
   (when (< (length *players*) 2) t))
