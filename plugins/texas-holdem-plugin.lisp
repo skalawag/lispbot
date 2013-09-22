@@ -380,7 +380,7 @@ the betting-round is over."
 (defun set-blinds (players)
   "Always call this after rotating."
   (handle-player-action (car players) 'bet *small-blind*)
-  (handle-player-action (cadr players) 'raise *big-blind*))
+  (handle-player-action (cadr players) 'raise *small-blind*))
 
 (defun get-acting (players)
   (let ((acting (remove-if-not #'(lambda (p) (acting p)) players)))
