@@ -103,15 +103,39 @@
     (handle-player-action
      (get-player (nick (sender *last-message*))) 'bet (read-from-string amt))
     (advance-game)
-    (display-game-state)))
+    (when (not *game-over*)
+      (display-game-state))))
 
 (defcommand raise ((plugin texas-holdem-plugin) amt)
   (declare (ignore plugin))
-  (when (string= (pname (get-acting *players*)) (nick (sender *last-message*)))
-    (handle-player-action
-     (get-player (nick (sender *last-message*))) 'raise (read-from-string amt))
-    (advance-game)
-    (display-game-state)))
+  (let ((nick (nick (sender *last-message*))))
+    (when (string= (pname (get-acting *players*)) nick)
+      (handle-player-action
+       (get-player nick) 'raise (read-from-string amt))
+      (advance-game)
+      (when (not *game-over*)
+        (display-game-state)))))
+
+(defcommand allin ((plugin texas-holdem-plugin))
+  (declare (ignore plugin))
+  (let ((nick (nick (sender *last-message*))))
+    (when (string= (pname (get-acting *players*)) nick)
+      (handle-player-action (get-player nick) 'allin)
+      (advance-game)
+      (when (not *game-over*)
+        (display-game-state)))))
+
+(defcommand new ((plugin texas-holdem-plugin))
+  (declare (ignore plugin))
+  (setf *players* nil
+        *game-started* nil
+        *game-over* nil
+        *bets* nil
+        *prev-bets* nil
+        *hand-number* 0
+        *community-cards* nil
+        *stage* "Pre-Flop"))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; Display
