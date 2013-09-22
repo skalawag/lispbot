@@ -307,32 +307,27 @@
      ;; in order to give the big blind an option, have to move the flag
      (when (and (string= *stage* "Pre-Flop") (= (length (cdr *bets*)) 2))
        (set-player-flag player))
-     (let ((p (player-in-bets? *bets* player)))
-       (if p
-	   (setf *bets* (update-player-in-bets
-			   (call player (car *bets*)) *bets*))
-	   (setf *bets*
-		 (append *bets* (list (call player (car *bets*))))))))
+     (call player))
     ((eq action 'bet)
      (if *bets*
 	 (handle-player-action player 'raise amt)
-	 (progn
-	   (if (or (and (string= *stage* "Pre-Flop") (= amt 5))
-		   (>= amt 10))
-	       (progn
-		 (setf *bets* (bet player amt))
-		 (set-player-flag player))
-	       nil))))
+         (progn
+	   (when (or (and (string= *stage* "Pre-Flop") (= amt 5))
+                     (>= amt 10))
+             (bet player amt)
+             (set-player-flag player)))))
     ((eq action 'raise)
      (cond
        ((null *bets*)
 	(handle-player-action player 'bet amt))
-       ((< amt (* 2 (car *bets*)))
+       ((< (+ amt (car *bets*)) (* 2 (car *bets*)))
 	nil) ; illegal raise
        (t
 	(set-player-flag player)
-	(setf *bets* (append *bets* (list (raise player amt))))
-	(setf (car *bets*) amt))))))
+	(raise player amt))))
+    ((eq action 'allin)
+     (set-player-flag player)
+     (allin player))))
 
 (defun set-player-flag (player)
   "When a player bets or raises, set this flag. When we see it again,
