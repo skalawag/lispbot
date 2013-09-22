@@ -393,6 +393,7 @@ the betting-round is over."
       (remove-if
        #'(lambda (x) (or
 		      (and (folded x) (not (acting x)))
+                      ;; why is this condition here?
 		      (and (= (chips x) 0) (not (acting x)))))
 		 players)
       (remove-if
