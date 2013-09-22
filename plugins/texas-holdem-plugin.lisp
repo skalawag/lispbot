@@ -179,7 +179,7 @@
     (sleep .5)
     (reply (format nil "~a: ~a  Holding: ~a"
                    (pname w)
-                   (best-hand w)
+                   (hand w)
                    (pockets w)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
