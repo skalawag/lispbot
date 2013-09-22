@@ -67,7 +67,7 @@
     (display-game-state)))
 
 (defcommand rd ((plugin texas-holdem-plugin))
-  "Redraw the display manually when it gets stuck."
+  "Redraw the display manually if display fails."
   (declare (ignore plugin))
   (display-game-state))
 
