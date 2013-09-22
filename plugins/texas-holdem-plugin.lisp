@@ -375,12 +375,10 @@
      ;; we only need this for Flop and later anyway
      (when (and (string/= *stage* "Pre-Flop") *first-check*)
        (set-player-flag player)
-       (setf *first-check* nil)))
+       (setf *first-check* nil))
+     (when (and (string= *stage* "Pre-Flop") (equal player (second *players*)))
+       (setf *option-exercised* t)))
     ((eq action 'call)
-     ;; FIXME: this is broken now, because with two players, there
-     ;; will only be two elements in the cdr of *bets*
-     (when (and (string= *stage* "Pre-Flop") (= (length (cdr *bets*)) 2))
-       (set-player-flag player))
      (call player))
     ((eq action 'bet)
      (if *bets*
@@ -397,6 +395,10 @@
        ((< (+ amt (car *bets*)) (* 2 (car *bets*)))
 	nil) ; illegal raise
        (t
+        (when (and
+               (string= *stage* "Pre-Flop")
+               (null *option-exercised*))
+          (setf *option-exercised* t))
 	(set-player-flag player)
 	(raise player amt))))
     ((eq action 'allin)
@@ -412,7 +414,10 @@ the betting-round is over."
 
 (defun betting-round-over? (player)
   "duh: pot-is-good might obviate the need for set-player-flag."
-  (or (and (string/= *stage* "Pre-Flop") (pot-is-good?)) (flag player)))
+  (or
+   (and (string/= *stage* "Pre-Flop") (pot-is-good?))
+   (and (string= *stage* "Pre-Flop") *option-exercised* (pot-is-good?))
+   (= (length (get-unfolded *players*)) 1)))
 
 (defun pot-is-good? ()
   (let ((res t))
@@ -457,7 +462,8 @@ the betting-round is over."
 (defun set-blinds (players)
   "Always call this after rotating."
   (handle-player-action (car players) 'bet *small-blind*)
-  (handle-player-action (cadr players) 'raise *small-blind*))
+  (handle-player-action (cadr players) 'raise *small-blind*)
+  (setf *option-exercised* nil))
 
 (defun get-acting (players)
   (let ((acting (remove-if-not #'(lambda (p) (acting p)) players)))
