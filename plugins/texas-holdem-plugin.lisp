@@ -215,8 +215,6 @@
 ;;;; Global variables
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defparameter *debug* nil)
-
 (defparameter *game-started* nil)
 
 (defparameter *game-over* nil)
