@@ -251,28 +251,62 @@
     ((> amt (chips player))
      (let ((amt (chips player)))
        (setf (chips player) 0)
-       (list amt (cons player amt))))
+       (setf *bets* (list amt (cons player amt)))))
     (t
      (setf (chips player) (- (chips player) amt))
-     (list amt (cons player amt)))))
+     (setf *bets* (list amt (cons player amt))))))
 
-(defun call (player amt)
-  (cond
-    ((< (chips player) amt)
-     (let ((new-amt (chips player)))
-       (setf (chips player) 0)
-       (cons player new-amt)))
-    (t
-     (let ((p (player-in-bets? *bets* player)))
-       (if p
-	   (progn
-	     (setf (chips player) (- (chips player) (- amt (cdr p)))))
-	   (progn
-	     (setf (chips player) (- (chips player) amt))))
-       (cons player amt)))))
+(defun debit-chips (player amt)
+  (setf (chips player) (- (chips player) amt)))
 
 (defun raise (player amt)
-  (cadr (bet player amt)))
+  (if (< (chips player) (+ (car *bets*) amt))
+      (progn
+        (setf *bets*
+              (update-player-in-bets
+               (cons player (+ (car *bets*) (chips player))) *bets*))
+        (setf (car *bets*) (+ (car *bets*) (chips player)))
+        (setf (chips player) 0))
+      (progn
+        (if (player-in-bets? *bets* player)
+            (debit-chips player (- (+ (car *bets*) amt)
+                                   (get-bet-for-display player *bets*)))
+            (debit-chips player (+ (car *bets*) amt)))
+        (setf *bets*
+              (update-player-in-bets (cons player (+ (car *bets*) amt)) *bets*))
+        (setf (car *bets*) (+ (car *bets*) amt)))))
+
+(defun allin (player)
+  (when (> (+ (chips player) (get-bet-for-display player *bets*)) (car *bets*))
+    (setf (car *bets*) (+ (chips player) (get-bet-for-display player *bets*))))
+  (if (player-in-bets? *bets* player)
+      (setf *bets* (update-player-in-bets
+                    (cons player (+ (chips player)
+                                    (get-bet-for-display player *bets*))) *bets*))
+      (setf *bets* (update-player-in-bets (cons player (chips player)) *bets*)))
+  (setf (chips player) 0))
+
+(defun call (player)
+  (let ((p (player-in-bets? *bets* player))
+        (bet-to-call (car *bets*)))
+    (cond
+      (p
+       (if (< (chips player) (- bet-to-call (cdr p)))
+           (progn
+             (setf (chips player) 0)
+             (setf *bets* (update-player-in-bets
+                           (cons player (+ (cdr p) (chips player))) *bets*)))
+           (progn
+             (setf (chips player) (- (chips player) (- bet-to-call (cdr p))))
+             (setf *bets*
+                   (update-player-in-bets (cons player bet-to-call) *bets*)))))
+      ((< (chips player) bet-to-call)
+       (let ((new-amt (chips player)))
+         (setf (chips player) 0)
+         (setf *bets* (update-player-in-bets (cons player new-amt) *bets*))))
+      (t
+       (setf (chips player) (- (chips player) bet-to-call))
+       (setf *bets* (update-player-in-bets (cons player bet-to-call) *bets*))))))
 
 (defun player-in-bets? (bet-list player)
   "If a player has already placed a bet or called, retrieve him from
