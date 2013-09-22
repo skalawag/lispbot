@@ -417,7 +417,11 @@ the betting-round is over."
 (defun reset-hand ()
   (remove-busted-players)
   (if (game-over?)
-      (reply (format nil "The game is over. ~a has won!" (car *players*)))
+      (progn
+        (reply (format nil "The game is over. ~a has won!"
+                       (pname (car *players*))))
+        (setf *game-over* t)
+        (post-game-cleanup))
       (progn
         (mapcar #'(lambda (x)
                     (setf (acting x) nil)
