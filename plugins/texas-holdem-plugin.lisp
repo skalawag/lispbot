@@ -481,6 +481,16 @@ the betting-round is over."
 	   #'(lambda (x) (if (and (consp x) (equal (car x) player)) t nil))
 	   *prev-bets*))))
 
+(defun get-bet-for-display (player bet-list)
+  "Since get-bet is also called by adjust, let's use this for display
+until we know whether or not adjust really needs get-bet to do what
+get-bet does. NOTE: I think I can dispense with this now."
+  (let ((res 0))
+    (dolist (b (cdr bet-list))
+      (when (equal (car b) player)
+        (setf res (+ res (cdr b)))))
+    res))
+
 (defun get-bet (player bet-list)
   (dolist (b bet-list)
     (when (consp b)
