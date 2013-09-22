@@ -411,9 +411,6 @@ the betting-round is over."
 (defun betting-round-over? (player)
   "duh: pot-is-good might obviate the need for set-player-flag."
   (pot-is-good?))
-  ;; (when (or (eq (flag player) t)
-  ;;           (= (length (remove-if #'(lambda (p) (= (chips p) 0)) *players*)) 0))
-  ;;           t))
 
 (defun pot-is-good? ()
   (let ((res t))
