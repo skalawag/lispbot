@@ -1,7 +1,8 @@
 * README for contest submission
 ** Running the game
-- setup
-- my-startbot.lisp
+- Clone this branch of the Lispbot repository, edit my-startbot.lisp
+  and load that file at the REPL.
+
 ** Git history
 The development of this plugin has undergone a couple of iterations in
 more than two repositories. This is partly because I made a couple of
@@ -9,9 +10,9 @@ restarts from scratch, and partly because I don't know how to use git
 very well, yet.
 
 If the judges or contest administrators want to see more of the
-history of the parts of this plugin (to verify that the development
-occurred within the contest time-frame), I've pushed the relevant
-repositories to github for reference. They are as follows:
+history of the parts of this plugin (for instance, to verify that the
+development occurred within the contest time-frame), I've pushed the
+relevant repositories to github for reference. They are as follows:
 
 - [[https://github.com/skalawag/cl-poker][cl-poker]]
 
@@ -30,4 +31,4 @@ repositories to github for reference. They are as follows:
 - Finally in this repository, I pulled together the best parts of
   those projects, added the plugin code, and refined the poker code.
 
-- *Sigh*. Sorry for the mess.
+- =Sigh= Sorry for the mess.
