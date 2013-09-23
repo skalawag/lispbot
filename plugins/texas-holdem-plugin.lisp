@@ -104,7 +104,9 @@ raise-or-fold, etc."
 
 (defcommand bet ((plugin texas-holdem-plugin) amt)
   (declare (ignore plugin))
-  (when (string= (pname (get-acting *players*)) (nick (sender *last-message*)))
+  (when (and
+         (string= (pname (get-acting *players*)) (nick (sender *last-message*)))
+         (>= (read-from-string amt) *big-blind*))
     (handle-player-action
      (get-player (nick (sender *last-message*))) 'bet (read-from-string amt))
     (advance-game)
@@ -114,7 +116,9 @@ raise-or-fold, etc."
 (defcommand raise ((plugin texas-holdem-plugin) amt)
   (declare (ignore plugin))
   (let ((nick (nick (sender *last-message*))))
-    (when (string= (pname (get-acting *players*)) nick)
+    (when (and (string= (pname (get-acting *players*)) nick)
+               *bets*
+               (>= (read-from-string amt) (car *bets*)))
       (handle-player-action
        (get-player nick) 'raise (read-from-string amt))
       (advance-game)
