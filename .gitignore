@@ -43,3 +43,4 @@
 /plugins/poker-plugin.lisp
 /plugins/sleep-plugin.lisp
 /plugins/wiktionary-plugin.lisp
+/plugins/holdem-plugin.lisp
