@@ -10,6 +10,12 @@
            :info-plugin
            :box-plugin
            :cake-plugin
+;           :holdem-plugin
+           :texas-holdem-plugin
+           :bb-plugin
+           :sleep-plugin
+           :fortune-plugin
+;           :wiktionary-plugin
 
            ;; dice plugin
            :dice-plugin

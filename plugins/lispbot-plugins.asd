@@ -5,7 +5,19 @@
   :maintainer "Hans-Peter Deifel"
   :licence "GPL"
   :description "Some common plugins for the lispbot"
-  :components ((:file "dice-plugin"
+  :components ((:file "texas-holdem-plugin"
+                      :depends-on ("package"))
+               (:file "bb-plugin"
+                      :depends-on ("package"))
+               ;; (:file "wiktionary-plugin"
+               ;;        :depends-on ("package"))
+               (:file "sleep-plugin"
+                      :depends-on ("package"))
+               (:file "fortune-plugin"
+                      :depends-on ("package"))
+               ;; (:file "holdem-plugin"
+               ;;        :depends-on ("package"))
+               (:file "dice-plugin"
 		      :depends-on ("package"))
 	       (:file "greet-plugin"
 		      :depends-on ("package"))
@@ -28,4 +40,4 @@
 	       (:file "log-plugin"
 		      :depends-on ("package"))
 	       (:file "package"))
-  :depends-on (:lispbot :alexandria))
+  :depends-on (:lispbot :alexandria :fiveam))
