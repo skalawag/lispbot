@@ -5,15 +5,7 @@
 
 (setq wispy
       (make-instance 'bot :nick "euclid"
-                     :channels (list "#test-wispy")
-                     :plugins (list 'bot.plugins:texas-holdem-plugin
-                                    ;; 'bot.plugins:holdem-plugin
-                                    ;; 'bot.plugins:roulette-plugin
-                                    ;; 'bot.plugins:buzz-off-plugin
-                                    ;; 'bot.plugins:wiktionary-plugin
-                                    'bot.plugins:bb-plugin
-                                    'bot.plugins:sleep-plugin
-                                    'bot.plugins:fortune-plugin
-                                    )))
+                     :channels (list "#test-room-for-wispy")
+                     :plugins (list 'bot.plugins:texas-holdem-plugin)))
 
 (bot:start wispy "irc.freenode.net")
