@@ -176,12 +176,17 @@
       (setf res (append res (list (+ i 3)))))
     (append res (list "[d]"))))
 
+(defun round-to (number precision &optional (what #'round))
+"from: http://www.codecodex.com/wiki/Round_a_number_to_a_specific_decimal_place"
+    (let ((div (expt 10 precision)))
+         (float (/ (funcall what (* number div)) div))))
+
 (defun display-game-state ()
   (let ((seats (seating-format-values))
         (field-string "~5a ~10a ~4a ~10a ~6a ~3a~%"))
     (reply (format nil "Stage: ~a   Pot: ~a  Hand: ~a"
                    *stage*
-                   (compute-pot *prev-bets* *bets*)
+                   (round-to (compute-pot *prev-bets* *bets*) 2)
                    *hand-number*))
     (sleep .5)
     (reply (format nil "Community Cards: ~a" (community-cards)))
@@ -195,11 +200,11 @@
               (pop seats)
               (pname p)
               (if (acting p) "*" "")
-              (chips p)
+              (round-to (chips p) 2)
               ;; not sure how best to fix this yet.
               (if (null (get-bet-for-display p *bets*))
                   0
-                  (get-bet-for-display p *bets*))
+                  (round-to (get-bet-for-display p *bets*) 2))
               (if (folded p) (folded p) "--"))))))
 
 (defun display-winners (winners)
