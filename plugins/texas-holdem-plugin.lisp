@@ -139,7 +139,6 @@
         *community-cards* nil
         *stage* "Pre-Flop"))
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; Display
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -215,6 +214,8 @@
 ;;;; Global variables
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defparameter *run-tests* nil)
+
 (defparameter *game-started* nil)
 
 (defparameter *game-over* nil)
@@ -265,6 +266,7 @@
         *game-over* nil
         *players* nil
         *option-exercised* nil
+        *first-check* t
         *hand-number* 0
         *bets* nil
         *prev-bets* nil))
@@ -445,303 +447,6 @@ the betting-round is over."
           (setf res nil)))
     res))
 
-;; Tests
-(5am:run! 'postflop-three-players--raise-raise-call-call)
-(5am:run! 'postflop-three-players--raise-call-fold)
-(5am:run! 'postflop-three-players--raise-call-fold)
-(5am:run! 'postflop-three-players--raise-fold-call)
-(5am:run! 'postflop-three-players--raise-call-call)
-(5am:run! 'postflop-three-players--check-check-check)
-(5am:run! 'preflop-three-players--raise-raise-call-call)
-(5am:run! 'preflop-three-players--raise-call-fold)
-(5am:run! 'preflop-three-players--raise-call-fold)
-(5am:run! 'preflop-three-players--raise-fold-call)
-(5am:run! 'preflop-three-players--raise-call-call)
-(5am:run! 'preflop-three-players--call-call-check)
-(5am:run! 'postflop-two-players--check-check)
-(5am:run! 'preflop-two-players--call-fold)
-(5am:run! 'preflop-two-players-raise-raise-fold)
-(5am:run! 'preflop-two-players-raise-raise-call)
-(5am:run! 'preflop-two-players--raise-fold)
-(5am:run! 'preflop-two-players--fold)
-(5am:run! 'preflop-two-players-raise-fold)
-(5am:run! 'preflop-two-players-raise-call)
-(5am:run! 'preflop-two-players-call-check)
-
-(5am:test postflop-three-players--raise-raise-call-call
-  (set-up-game-state '("fyv" "wag" "gog") "Flop")
-  (5am:is (null (betting-round-over?)))
-  (handle-player-action (get-acting *players*) 'raise 45)
-  (advance-acting *players*)
-  (5am:is (null (betting-round-over?)))
-  (handle-player-action (get-acting *players*) 'raise 100)
-  (advance-acting *players*)
-  (5am:is (null (betting-round-over?)))
-  (handle-player-action (get-acting *players*) 'call)
-  (advance-acting *players*)
-  (5am:is (null (betting-round-over?)))
-  (handle-player-action (get-acting *players*) 'call)
-  (advance-acting *players*)
-  (5am:is (eq t (betting-round-over?)))
-  )
-
-(5am:test postflop-three-players--raise-call-fold
-  (set-up-game-state '("fyv" "wag" "gog") "Flop")
-  (5am:is (null (betting-round-over?)))
-  (handle-player-action (get-acting *players*) 'raise 45)
-  (advance-acting *players*)
-  (5am:is (null (betting-round-over?)))
-  (handle-player-action (get-acting *players*) 'call)
-  (advance-acting *players*)
-  (5am:is (null (betting-round-over?)))
-  (handle-player-action (get-acting *players*) 'fold)
-  (advance-acting *players*)
-  (5am:is (eq t (betting-round-over?))))
-
-(5am:test postflop-three-players--raise-call-fold
-  (set-up-game-state '("fyv" "wag" "gog") "Flop")
-  (5am:is (null (betting-round-over?)))
-  (handle-player-action (get-acting *players*) 'raise 45)
-  (advance-acting *players*)
-  (5am:is (null (betting-round-over?)))
-  (handle-player-action (get-acting *players*) 'call)
-  (advance-acting *players*)
-  (5am:is (null (betting-round-over?)))
-  (handle-player-action (get-acting *players*) 'fold)
-  (advance-acting *players*)
-  (5am:is (eq t (betting-round-over?))))
-
-(5am:test postflop-three-players--raise-fold-call
-  (set-up-game-state '("fyv" "wag" "gog") "Flop")
-  (5am:is (null (betting-round-over?)))
-  (handle-player-action (get-acting *players*) 'raise 45)
-  (advance-acting *players*)
-  (5am:is (null (betting-round-over?)))
-  (handle-player-action (get-acting *players*) 'fold)
-  (advance-acting *players*)
-  (5am:is (null (betting-round-over?)))
-  (handle-player-action (get-acting *players*) 'call)
-  (advance-acting *players*)
-  (5am:is (eq t (betting-round-over?))))
-
-(5am:test postflop-three-players--raise-call-call
-  (set-up-game-state '("fyv" "wag" "gog") "Flop")
-  (5am:is (null (betting-round-over?)))
-  (handle-player-action (get-acting *players*) 'raise 45)
-  (advance-acting *players*)
-  (5am:is (null (betting-round-over?)))
-  (handle-player-action (get-acting *players*) 'call)
-  (advance-acting *players*)
-  (5am:is (null (betting-round-over?)))
-  (handle-player-action (get-acting *players*) 'call)
-  (advance-acting *players*)
-  (5am:is (eq t (betting-round-over?))))
-
-(5am:test postflop-three-players--check-check-check
-  (set-up-game-state '("fyv" "wag" "gog") "Flop")
-  (5am:is (null (betting-round-over?)))
-  (handle-player-action (get-acting *players*) 'check)
-  (advance-acting *players*)
-  (5am:is (null (betting-round-over?)))
-  (handle-player-action (get-acting *players*) 'check)
-  (advance-acting *players*)
-  (5am:is (null (betting-round-over?)))
-  (handle-player-action (get-acting *players*) 'check)
-  (advance-acting *players*)
-  (5am:is (eq t (betting-round-over?))))
-
-(5am:test preflop-three-players--raise-raise-call-call
-  (set-up-game-state '("fyv" "wag" "gog"))
-  (5am:is (null (betting-round-over?)))
-  (handle-player-action (get-acting *players*) 'raise 45)
-  (advance-acting *players*)
-  (5am:is (null (betting-round-over?)))
-  (handle-player-action (get-acting *players*) 'raise 100)
-  (advance-acting *players*)
-  (5am:is (null (betting-round-over?)))
-  (handle-player-action (get-acting *players*) 'call)
-  (advance-acting *players*)
-  (5am:is (null (betting-round-over?)))
-  (handle-player-action (get-acting *players*) 'call)
-  (advance-acting *players*)
-  (5am:is (eq t (betting-round-over?))))
-
-(5am:test preflop-three-players--raise-call-fold
-  (set-up-game-state '("fyv" "wag" "gog"))
-  (5am:is (null (betting-round-over?)))
-  (handle-player-action (get-acting *players*) 'raise 45)
-  (advance-acting *players*)
-  (5am:is (null (betting-round-over?)))
-  (handle-player-action (get-acting *players*) 'call)
-  (advance-acting *players*)
-  (5am:is (null (betting-round-over?)))
-  (handle-player-action (get-acting *players*) 'fold)
-  (advance-acting *players*)
-  (5am:is (eq t (betting-round-over?))))
-
-(5am:test preflop-three-players--raise-call-fold
-  (set-up-game-state '("fyv" "wag" "gog"))
-  (5am:is (null (betting-round-over?)))
-  (handle-player-action (get-acting *players*) 'raise 45)
-  (advance-acting *players*)
-  (5am:is (null (betting-round-over?)))
-  (handle-player-action (get-acting *players*) 'call)
-  (advance-acting *players*)
-  (5am:is (null (betting-round-over?)))
-  (handle-player-action (get-acting *players*) 'fold)
-  (advance-acting *players*)
-  (5am:is (eq t (betting-round-over?))))
-
-(5am:test preflop-three-players--raise-fold-call
-  (set-up-game-state '("fyv" "wag" "gog"))
-  (5am:is (null (betting-round-over?)))
-  (handle-player-action (get-acting *players*) 'raise 45)
-  (advance-acting *players*)
-  (5am:is (null (betting-round-over?)))
-  (handle-player-action (get-acting *players*) 'fold)
-  (advance-acting *players*)
-  (5am:is (null (betting-round-over?)))
-  (handle-player-action (get-acting *players*) 'call)
-  (advance-acting *players*)
-  (5am:is (eq t (betting-round-over?))))
-
-(5am:test preflop-three-players--raise-call-call
-  (set-up-game-state '("fyv" "wag" "gog"))
-  (5am:is (null (betting-round-over?)))
-  (handle-player-action (get-acting *players*) 'raise 45)
-  (advance-acting *players*)
-  (5am:is (null (betting-round-over?)))
-  (handle-player-action (get-acting *players*) 'call)
-  (advance-acting *players*)
-  (5am:is (null (betting-round-over?)))
-  (handle-player-action (get-acting *players*) 'call)
-  (advance-acting *players*)
-  (5am:is (eq t (betting-round-over?))))
-
-(5am:test preflop-three-players--call-call-check
-  (set-up-game-state '("fyv" "wag" "gog"))
-  (5am:is (null (betting-round-over?)))
-  (handle-player-action (get-acting *players*) 'call)
-  (advance-acting *players*)
-  (5am:is (null (betting-round-over?)))
-  (handle-player-action (get-acting *players*) 'call)
-  (advance-acting *players*)
-  (5am:is (null (betting-round-over?)))
-  (handle-player-action (get-acting *players*) 'check)
-  (advance-acting *players*)
-  (5am:is (eq t (betting-round-over?))))
-
-(5am:test postflop-two-players--check-check
-  (set-up-game-state '("fyv" "wag") "Flop")
-  (handle-player-action (get-acting *players*) 'check)
-  (advance-acting *players*)
-  (5am:is (null (betting-round-over?)))
-  (handle-player-action (get-acting *players*) 'check)
-  (advance-acting *players*)
-  (5am:is (eq t (betting-round-over?))))
-
-(5am:test preflop-two-players--call-fold
-  (set-up-game-state '("fyv" "wag"))
-  (handle-player-action (get-acting *players*) 'call)
-  (advance-acting *players*)
-  (handle-player-action (get-acting *players*) 'fold)
-  (advance-acting *players*)
-  (5am:is (eq t (betting-round-over?))))
-
-(5am:test preflop-two-players--raise-fold
-  (set-up-game-state '("fyv" "wag"))
-  (5am:is (null (betting-round-over?)))
-  (handle-player-action (get-acting *players*) 'raise 45)
-  (advance-acting *players*)
-  (handle-player-action (get-acting *players*) 'fold)
-  (advance-acting *players*)
-  (5am:is (eq t (betting-round-over?))))
-
-(5am:test preflop-two-players--fold
-  (set-up-game-state '("fyv" "wag"))
-  (5am:is (null (betting-round-over?)))
-  (handle-player-action (get-acting *players*) 'fold)
-  (advance-acting *players*)
-  (5am:is (eq t (betting-round-over?))))
-
-(5am:test preflop-two-players-raise-fold
-  (set-up-game-state '("fyv" "wag"))
-  (5am:is (null (betting-round-over?)))
-  (handle-player-action (get-acting *players*) 'raise 45)
-  (advance-acting *players*)
-  (5am:is (null (betting-round-over?)))
-  (handle-player-action (get-acting *players*) 'fold)
-  (advance-acting *players*)
-  (5am:is (eq (betting-round-over?) t)))
-
-(5am:test preflop-two-players-raise-raise-call
-  (set-up-game-state '("fyv" "wag"))
-  (5am:is (null (betting-round-over?)))
-  (handle-player-action (get-acting *players*) 'raise 45)
-  (advance-acting *players*)
-  (5am:is (null (betting-round-over?)))
-  (handle-player-action (get-acting *players*) 'raise 100)
-  (advance-acting *players*)
-  (5am:is (null (betting-round-over?)))
-  (handle-player-action (get-acting *players*) 'call)
-  (advance-acting *players*)
-  (5am:is (eq (betting-round-over?) t)))
-
-(5am:test preflop-two-players-raise-raise-fold
-  (set-up-game-state '("fyv" "wag"))
-  (5am:is (null (betting-round-over?)))
-  (handle-player-action (get-acting *players*) 'raise 45)
-  (advance-acting *players*)
-  (5am:is (null (betting-round-over?)))
-  (handle-player-action (get-acting *players*) 'raise 100)
-  (advance-acting *players*)
-  (5am:is (null (betting-round-over?)))
-  (handle-player-action (get-acting *players*) 'fold)
-  (advance-acting *players*)
-  (5am:is (eq (betting-round-over?) t)))
-
-(5am:test preflop-two-players-raise-call
-  (set-up-game-state '("fyv" "wag"))
-  (5am:is (null (betting-round-over?)))
-  (handle-player-action (get-acting *players*) 'raise 45)
-  (advance-acting *players*)
-  (5am:is (null (betting-round-over?)))
-  (handle-player-action (get-acting *players*) 'call)
-  (advance-acting *players*)
-  (5am:is (eq (betting-round-over?) t)))
-
-(5am:test preflop-two-players-call-check
-  (set-up-game-state '("fyv" "wag"))
-  (5am:is (null (betting-round-over?)))
-  (handle-player-action (get-acting *players*) 'call) ; handle
-  (advance-acting *players*)                          ; advance
-  (5am:is (null (betting-round-over?)))               ; test ... etc.
-  (handle-player-action (get-acting *players*) 'check)
-  (advance-acting *players*)
-  (5am:is (eq t (betting-round-over?))))
-
-(defun set-up-game-state (list-of-player-names &optional stage)
-  "Set up for tests"
-  (post-game-cleanup)
-  (if stage
-      (setf *stage* stage)
-      (setf *stage* "Pre-Flop"))
-  (dolist (p list-of-player-names)
-    (push (make-player p) *players*))
-  (cond
-    ((and (null stage) (> (length *players*) 2))
-     (set-blinds *players*)
-     (setf (acting (third *players*)) t))
-    ((null stage)
-     (set-blinds *players*)
-     (setf (acting (car *players*)) t))
-    (t (setf (acting (car *players*)) t))))
-
-
-
-(defun run-betting-round-over?-tests ()
-  (5am:run! 'betting-round-over?-test))
-
 (defun hand-over? ()
   (let ((acting (get-acting *players*)))
     (when (or (and (eq (flag acting) t) (string= *stage* "River"))
@@ -751,7 +456,6 @@ the betting-round is over."
 		 2))
               (< (length (get-unfolded *players*)) 2))
       t)))
-
 
 (defun game-over? ()
   (when (< (length *players*) 2) t))
@@ -1283,3 +987,315 @@ somewhere (pastebin? stackoverflow?), but I can't recall where...:/"
 (defparameter *pair-kickers*
   (sort (combinations 3 '(2 3 4 5 6 7 8 9 10 11 12 13 14))
 	#'< :key #'(lambda (x) (car x))))
+
+;; Tests
+
+(when *run-tests*
+  (5am:run! 'postflop-three-players--raise-raise-call-call)
+  (5am:run! 'postflop-three-players--raise-call-fold)
+  (5am:run! 'postflop-three-players--raise-fold-call)
+  (5am:run! 'postflop-three-players--raise-call-call)
+  (5am:run! 'postflop-three-players--check-check-check)
+  (5am:run! 'preflop-three-players--raise-raise-call-call)
+  (5am:run! 'preflop-three-players--raise-call-fold)
+  (5am:run! 'preflop-three-players--raise-fold-call)
+  (5am:run! 'preflop-three-players--raise-call-call)
+  (5am:run! 'preflop-three-players--call-call-check)
+  (5am:run! 'postflop-two-players--bet-raise-fold)
+  (5am:run! 'postflop-two-players--bet-raise-call)
+  (5am:run! 'postflop-two-players--fold)
+  (5am:run! 'postflop-two-players--bet-fold)
+  (5am:run! 'postflop-two-players--bet-call)
+  ;;(5am:run! 'postflop-two-players--check-bet-call)
+  (5am:run! 'postflop-two-players--check-check)
+  (5am:run! 'preflop-two-players--call-fold)
+  (5am:run! 'preflop-two-players--raise-raise-fold)
+  (5am:run! 'preflop-two-players--raise-raise-call)
+  (5am:run! 'preflop-two-players--fold)
+  (5am:run! 'preflop-two-players--raise-fold)
+  (5am:run! 'preflop-two-players--raise-call)
+  (5am:run! 'preflop-two-players--call-check))
+
+(5am:test postflop-three-players--raise-raise-call-call
+  (set-up-game-state '("fyv" "wag" "gog") "Flop")
+  (5am:is (null (betting-round-over?)))
+  (handle-player-action (get-acting *players*) 'raise 45)
+  (advance-acting *players*)
+  (5am:is (null (betting-round-over?)))
+  (handle-player-action (get-acting *players*) 'raise 100)
+  (advance-acting *players*)
+  (5am:is (null (betting-round-over?)))
+  (handle-player-action (get-acting *players*) 'call)
+  (advance-acting *players*)
+  (5am:is (null (betting-round-over?)))
+  (handle-player-action (get-acting *players*) 'call)
+  (advance-acting *players*)
+  (5am:is (eq t (betting-round-over?)))
+  )
+
+(5am:test postflop-three-players--raise-call-fold
+  (set-up-game-state '("fyv" "wag" "gog") "Flop")
+  (5am:is (null (betting-round-over?)))
+  (handle-player-action (get-acting *players*) 'raise 45)
+  (advance-acting *players*)
+  (5am:is (null (betting-round-over?)))
+  (handle-player-action (get-acting *players*) 'call)
+  (advance-acting *players*)
+  (5am:is (null (betting-round-over?)))
+  (handle-player-action (get-acting *players*) 'fold)
+  (advance-acting *players*)
+  (5am:is (eq t (betting-round-over?))))
+
+(5am:test postflop-three-players--raise-fold-call
+  (set-up-game-state '("fyv" "wag" "gog") "Flop")
+  (5am:is (null (betting-round-over?)))
+  (handle-player-action (get-acting *players*) 'raise 45)
+  (advance-acting *players*)
+  (5am:is (null (betting-round-over?)))
+  (handle-player-action (get-acting *players*) 'fold)
+  (advance-acting *players*)
+  (5am:is (null (betting-round-over?)))
+  (handle-player-action (get-acting *players*) 'call)
+  (advance-acting *players*)
+  (5am:is (eq t (betting-round-over?))))
+
+(5am:test postflop-three-players--raise-call-call
+  (set-up-game-state '("fyv" "wag" "gog") "Flop")
+  (5am:is (null (betting-round-over?)))
+  (handle-player-action (get-acting *players*) 'raise 45)
+  (advance-acting *players*)
+  (5am:is (null (betting-round-over?)))
+  (handle-player-action (get-acting *players*) 'call)
+  (advance-acting *players*)
+  (5am:is (null (betting-round-over?)))
+  (handle-player-action (get-acting *players*) 'call)
+  (advance-acting *players*)
+  (5am:is (eq t (betting-round-over?))))
+
+(5am:test postflop-three-players--check-check-check
+  (set-up-game-state '("fyv" "wag" "gog") "Flop")
+  (5am:is (null (betting-round-over?)))
+  (handle-player-action (get-acting *players*) 'check)
+  (advance-acting *players*)
+  (5am:is (null (betting-round-over?)))
+  (handle-player-action (get-acting *players*) 'check)
+  (advance-acting *players*)
+  (5am:is (null (betting-round-over?)))
+  (handle-player-action (get-acting *players*) 'check)
+  (advance-acting *players*)
+  (5am:is (eq t (betting-round-over?))))
+
+(5am:test preflop-three-players--raise-raise-call-call
+  (set-up-game-state '("fyv" "wag" "gog"))
+  (5am:is (null (betting-round-over?)))
+  (handle-player-action (get-acting *players*) 'raise 45)
+  (advance-acting *players*)
+  (5am:is (null (betting-round-over?)))
+  (handle-player-action (get-acting *players*) 'raise 100)
+  (advance-acting *players*)
+  (5am:is (null (betting-round-over?)))
+  (handle-player-action (get-acting *players*) 'call)
+  (advance-acting *players*)
+  (5am:is (null (betting-round-over?)))
+  (handle-player-action (get-acting *players*) 'call)
+  (advance-acting *players*)
+  (5am:is (eq t (betting-round-over?))))
+
+(5am:test preflop-three-players--raise-call-fold
+  (set-up-game-state '("fyv" "wag" "gog"))
+  (5am:is (null (betting-round-over?)))
+  (handle-player-action (get-acting *players*) 'raise 45)
+  (advance-acting *players*)
+  (5am:is (null (betting-round-over?)))
+  (handle-player-action (get-acting *players*) 'call)
+  (advance-acting *players*)
+  (5am:is (null (betting-round-over?)))
+  (handle-player-action (get-acting *players*) 'fold)
+  (advance-acting *players*)
+  (5am:is (eq t (betting-round-over?))))
+
+(5am:test preflop-three-players--raise-fold-call
+  (set-up-game-state '("fyv" "wag" "gog"))
+  (5am:is (null (betting-round-over?)))
+  (handle-player-action (get-acting *players*) 'raise 45)
+  (advance-acting *players*)
+  (5am:is (null (betting-round-over?)))
+  (handle-player-action (get-acting *players*) 'fold)
+  (advance-acting *players*)
+  (5am:is (null (betting-round-over?)))
+  (handle-player-action (get-acting *players*) 'call)
+  (advance-acting *players*)
+  (5am:is (eq t (betting-round-over?))))
+
+(5am:test preflop-three-players--raise-call-call
+  (set-up-game-state '("fyv" "wag" "gog"))
+  (5am:is (null (betting-round-over?)))
+  (handle-player-action (get-acting *players*) 'raise 45)
+  (advance-acting *players*)
+  (5am:is (null (betting-round-over?)))
+  (handle-player-action (get-acting *players*) 'call)
+  (advance-acting *players*)
+  (5am:is (null (betting-round-over?)))
+  (handle-player-action (get-acting *players*) 'call)
+  (advance-acting *players*)
+  (5am:is (eq t (betting-round-over?))))
+
+(5am:test preflop-three-players--call-call-check
+  (set-up-game-state '("fyv" "wag" "gog"))
+  (5am:is (null (betting-round-over?)))
+  (handle-player-action (get-acting *players*) 'call)
+  (advance-acting *players*)
+  (5am:is (null (betting-round-over?)))
+  (handle-player-action (get-acting *players*) 'call)
+  (advance-acting *players*)
+  (5am:is (null (betting-round-over?)))
+  (handle-player-action (get-acting *players*) 'check)
+  (advance-acting *players*)
+  (5am:is (eq t (betting-round-over?))))
+
+(5am:test postflop-two-players--bet-raise-fold
+  (set-up-game-state '("fyv" "wag") "Flop")
+  (5am:is (null (betting-round-over?)))
+  (handle-player-action (get-acting *players*) 'bet 50)
+  (advance-acting *players*)
+  (5am:is (null (betting-round-over?)))
+  (handle-player-action (get-acting *players*) 'raise 100)
+  (advance-acting *players*)
+  (5am:is (null (betting-round-over?)))
+  (handle-player-action (get-acting *players*) 'fold)
+  (advance-acting *players*)
+  (5am:is (eq t (betting-round-over?))))
+
+(5am:test postflop-two-players--bet-raise-call
+  (set-up-game-state '("fyv" "wag") "Flop")
+  (5am:is (null (betting-round-over?)))
+  (handle-player-action (get-acting *players*) 'bet 50)
+  (advance-acting *players*)
+  (5am:is (null (betting-round-over?)))
+  (handle-player-action (get-acting *players*) 'raise 100)
+  (advance-acting *players*)
+  (5am:is (null (betting-round-over?)))
+  (handle-player-action (get-acting *players*) 'call)
+  (advance-acting *players*)
+  (5am:is (eq t (betting-round-over?))))
+
+(5am:test postflop-two-players--fold
+  (set-up-game-state '("fyv" "wag") "Flop")
+  (handle-player-action (get-acting *players*) 'fold)
+  (advance-acting *players*)
+  (5am:is (betting-round-over?)))
+
+(5am:test postflop-two-players--bet-fold
+  (set-up-game-state '("fyv" "wag") "Flop")
+  (handle-player-action (get-acting *players*) 'bet 50)
+  (advance-acting *players*)
+  (5am:is (null (betting-round-over?)))
+  (handle-player-action (get-acting *players*) 'fold)
+  (advance-acting *players*)
+  (5am:is (eq t (betting-round-over?))))
+
+(5am:test postflop-two-players--bet-call
+  (set-up-game-state '("fyv" "wag") "Flop")
+  (handle-player-action (get-acting *players*) 'bet 50)
+  (advance-acting *players*)
+  (5am:is (null (betting-round-over?)))
+  (handle-player-action (get-acting *players*) 'call)
+  (advance-acting *players*)
+  (5am:is (eq t (betting-round-over?))))
+
+(5am:test postflop-two-players--check-check
+  (set-up-game-state '("fyv" "wag") "Flop")
+  (handle-player-action (get-acting *players*) 'check)
+  (advance-acting *players*)
+  (5am:is (null (betting-round-over?)))
+  (handle-player-action (get-acting *players*) 'check)
+  (advance-acting *players*)
+  (5am:is (eq t (betting-round-over?))))
+
+(5am:test preflop-two-players--call-fold
+  (set-up-game-state '("fyv" "wag"))
+  (handle-player-action (get-acting *players*) 'call)
+  (advance-acting *players*)
+  (handle-player-action (get-acting *players*) 'fold)
+  (advance-acting *players*)
+  (5am:is (eq t (betting-round-over?))))
+
+(5am:test preflop-two-players--fold
+  (set-up-game-state '("fyv" "wag"))
+  (5am:is (null (betting-round-over?)))
+  (handle-player-action (get-acting *players*) 'fold)
+  (advance-acting *players*)
+  (5am:is (eq t (betting-round-over?))))
+
+(5am:test preflop-two-players--raise-fold
+  (set-up-game-state '("fyv" "wag"))
+  (5am:is (null (betting-round-over?)))
+  (handle-player-action (get-acting *players*) 'raise 45)
+  (advance-acting *players*)
+  (5am:is (null (betting-round-over?)))
+  (handle-player-action (get-acting *players*) 'fold)
+  (advance-acting *players*)
+  (5am:is (eq (betting-round-over?) t)))
+
+(5am:test preflop-two-players--raise-raise-call
+  (set-up-game-state '("fyv" "wag"))
+  (5am:is (null (betting-round-over?)))
+  (handle-player-action (get-acting *players*) 'raise 45)
+  (advance-acting *players*)
+  (5am:is (null (betting-round-over?)))
+  (handle-player-action (get-acting *players*) 'raise 100)
+  (advance-acting *players*)
+  (5am:is (null (betting-round-over?)))
+  (handle-player-action (get-acting *players*) 'call)
+  (advance-acting *players*)
+  (5am:is (eq (betting-round-over?) t)))
+
+(5am:test preflop-two-players--raise-raise-fold
+  (set-up-game-state '("fyv" "wag"))
+  (5am:is (null (betting-round-over?)))
+  (handle-player-action (get-acting *players*) 'raise 45)
+  (advance-acting *players*)
+  (5am:is (null (betting-round-over?)))
+  (handle-player-action (get-acting *players*) 'raise 100)
+  (advance-acting *players*)
+  (5am:is (null (betting-round-over?)))
+  (handle-player-action (get-acting *players*) 'fold)
+  (advance-acting *players*)
+  (5am:is (eq (betting-round-over?) t)))
+
+(5am:test preflop-two-players--raise-call
+  (set-up-game-state '("fyv" "wag"))
+  (5am:is (null (betting-round-over?)))
+  (handle-player-action (get-acting *players*) 'raise 45)
+  (advance-acting *players*)
+  (5am:is (null (betting-round-over?)))
+  (handle-player-action (get-acting *players*) 'call)
+  (advance-acting *players*)
+  (5am:is (eq (betting-round-over?) t)))
+
+(5am:test preflop-two-players--call-check
+  (set-up-game-state '("fyv" "wag"))
+  (5am:is (null (betting-round-over?)))
+  (handle-player-action (get-acting *players*) 'call) ; handle
+  (advance-acting *players*)                          ; advance
+  (5am:is (null (betting-round-over?)))               ; test ... etc.
+  (handle-player-action (get-acting *players*) 'check)
+  (advance-acting *players*)
+  (5am:is (eq t (betting-round-over?))))
+
+(defun set-up-game-state (list-of-player-names &optional stage)
+  "Set up for tests"
+  (post-game-cleanup)
+  (if stage
+      (setf *stage* stage)
+      (setf *stage* "Pre-Flop"))
+  (dolist (p list-of-player-names)
+    (push (make-player p) *players*))
+  (cond
+    ((and (null stage) (> (length *players*) 2))
+     (set-blinds *players*)
+     (setf (acting (third *players*)) t))
+    ((null stage)
+     (set-blinds *players*)
+     (setf (acting (car *players*)) t))
+    (t (setf (acting (car *players*)) t))))
