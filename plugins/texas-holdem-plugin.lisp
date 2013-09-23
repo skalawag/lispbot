@@ -198,7 +198,7 @@ raise-or-fold, etc."
       (sleep .5)
       (reply (format nil "~5a ~10a ~4a ~10,1F ~7,1F ~4<~a~>~%"
               (pop seats)
-              (pname p)
+              (if (> (length (pname p)) 10) (subseq (pname p) 0 9) (pname p))
               (if (acting p) "*" "")
               (chips p)
               ;; not sure how best to fix this yet.
