@@ -321,12 +321,14 @@
     ((and *bets* (player-in-bets? *bets* player))
      (setf *bets* (update-player-in-bets
                    (cons player (+ (chips player)
-                                   (get-bet-for-display player *bets*))) *bets*)))
+                                   (get-bet-for-display player *bets*))) *bets*))
+     (setf (car *bets*) (get-bet-for-display player *bets*)))
     ((and *bets* (null (player-in-bets? *bets* player)))
-     (setf *bets* (update-player-in-bets (cons player (chips player)) *bets*)))
+     (setf *bets* (update-player-in-bets (cons player (chips player)) *bets*))
+     (setf (car *bets*) (get-bet-for-display player *bets*)))
     (t
-     (setf *bets* (list (chips player) (cons player (chips player))))))
-  (setf (chips player) 0))
+     (setf *bets* (list (chips player) (cons player (chips player)))))
+  (setf (chips player) 0)))
 
 (defun call (player)
   (let ((p (player-in-bets? *bets* player))
