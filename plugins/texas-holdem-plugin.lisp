@@ -202,13 +202,27 @@
               (if (folded p) (folded p) "--"))))))
 
 (defun display-winners (winners)
+  "FIXME: if the caller isn't the winner, he should not be forced to
+show."
   (reply (format nil "The winners of hand ~a are:" *hand-number*))
   (dolist (w winners)
     (sleep .5)
-    (reply (format nil "~a: ~a  Holding: ~a"
+    (reply (format nil "~a: ~a (~a) Holding: ~a"
                    (pname w)
-                   (hand w)
-                   (pockets w)))))
+                   (car (last (hand w)))
+                   (second (hand w))
+                   (pockets w))))
+  (sleep .5)
+  (reply "The remaining hands are:")
+  (dolist (c (set-difference (get-unfolded *players*) winners :test #'equal))
+    (sleep .5)
+    (reply (format nil "~a: ~a (~a) Holding: ~a"
+                   (pname c)
+                   (car (last (hand c)))
+                   (second (hand c))
+                   (pockets c))))
+  (sleep .5)
+  (reply "------------------------------------------"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; Global variables
