@@ -9,5 +9,25 @@ restarts from scratch, and partly because I don't know how to use git
 very well, yet.
 
 If the judges or contest administrators want to see more of the
-history of the parts of this plugin, I've pushed the relevant
+history of the parts of this plugin (to verify that the development
+occurred within the contest time-frame), I've pushed the relevant
 repositories to github for reference. They are as follows:
+
+- [[https://github.com/skalawag/cl-poker][cl-poker]]
+
+  This was the origin of all this code, begun on June 25th.
+
+- [[https://github.com/skalawag/hand-evaluator][hand evaluator]]
+
+  This is a rewrite of the hand-evaluator in cl-poker,
+  substantially the same as the code in the plugin.
+
+- [[https://github.com/skalawag/cl-poker-2][cl-poker-2]]
+
+  This is a rewrite of the poker code in cl-poker, which uses the newer
+  hand-evaluator.
+
+- Finally in this repository, I pulled together the best parts of
+  those projects, added the plugin code, and refined the poker code.
+
+- *Sigh*. Sorry for the mess.
