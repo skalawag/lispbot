@@ -25,7 +25,9 @@
   (sleep .5)
   (reply "fold | check | call | bet AMT | raise AMT | allin: poker actions"))
 
-(defcommand holdem ((plugin texas-holdem-plugin))
+(defcommand holdem ((plugin texas-holdem-plugin) &optional variation)
+  "TODO: add variations on the game, such as binary poker,
+raise-or-fold, etc."
   (declare (ignore plugin))
   (let ((player (nick (sender *last-message*))))
     (cond
@@ -176,14 +178,8 @@
       (setf res (append res (list (+ i 3)))))
     (append res (list "[d]"))))
 
-(defun round-to (number precision &optional (what #'round))
-"from: http://www.codecodex.com/wiki/Round_a_number_to_a_specific_decimal_place"
-    (let ((div (expt 10 precision)))
-         (float (/ (funcall what (* number div)) div))))
-
 (defun display-game-state ()
-  (let ((seats (seating-format-values))
-        (field-string "~5a ~10a ~4a ~10a ~6a ~3a~%"))
+  (let ((seats (seating-format-values)))
     (reply (format nil "Stage: ~a   Pot: ~a  Hand: ~a"
                    *stage*
                    (round-to (compute-pot *prev-bets* *bets*) 2)
@@ -191,20 +187,20 @@
     (sleep .5)
     (reply (format nil "Community Cards: ~a" (community-cards)))
     (sleep .5)
-    (reply (format nil field-string
-                   "Seat" "Name" "Nxt" "Chips" "Bet" "Fld"))
+    (reply (format nil "~5a ~10a ~4a ~10<~a~> ~7<~a~> ~4<~a~>~%"
+                   "Seat" "Name" "Next" "Chips" "Bet" "Fld"))
     (sleep .5)
     (dolist (p *players*)
       (sleep .5)
-      (reply (format nil field-string
+      (reply (format nil "~5a ~10a ~4a ~10,1F ~7,1F ~4<~a~>~%"
               (pop seats)
               (pname p)
               (if (acting p) "*" "")
-              (round-to (chips p) 2)
+              (chips p)
               ;; not sure how best to fix this yet.
               (if (null (get-bet-for-display p *bets*))
                   0
-                  (round-to (get-bet-for-display p *bets*) 2))
+                  (get-bet-for-display p *bets*))
               (if (folded p) (folded p) "--"))))))
 
 (defun display-winners (winners)
