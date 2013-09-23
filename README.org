@@ -1,38 +1,13 @@
-README
-******
+* README for contest submission
+** Running the game
+- setup
+- my-startbot.lisp
+** Git history
+The development of this plugin has undergone a couple of iterations in
+more than two repositories. This is partly because I made a couple of
+restarts from scratch, and partly because I don't know how to use git
+very well, yet.
 
-1 Basic Usage
-*************
-
-Here is a brief description of a few quick steps to get the Lispbot up
-and running.
-
-Firstly you have to install and/or load the bot. See INSTALL, for
-details.
-
-Then you have to create a bot instance. This is done by:
-
-     (make-bot "nick" "#mychannel" :plugins '(plugin1 plugin2...))
-
-The second argument can also be a list of channels. The bot will join
-them all.
-
-The plugins can either be the classname of a plugin (e.g.
-'bot-plugins:help-plugin), an instance of a plugin or a list of any of
-those.
-
-For example:
-
-     (bot:make-bot "lispbot" '("#chan1" "#chan2")
-                   :plugins (list 'bot.plugins:help-plugin
-                                  'bot.plugins:dice-plugin
-                                  (make-instance 'bot.plugins:greet-plugin
-                                                 :greet-new-users t))
-
-To let the bot connect to a server and start, type:
-
-     (bot:start bot "example.com")
-
-You can stop the bot by interrupting the read-loop (typically `C-c').
-It will automatically disconnect from the server.
-
+If the judges or contest administrators want to see more of the
+history of the parts of this plugin, I've pushed the relevant
+repositories to github for reference. They are as follows:
