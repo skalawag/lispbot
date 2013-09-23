@@ -1,7 +1,8 @@
 * README for contest submission
 ** Running the game
-- Clone this branch of the Lispbot repository, edit my-startbot.lisp
-  and load that file at the REPL.
+Clone this branch of the Lispbot repository and edit my-startbot.lisp
+as needed. Create the irc-channel you chose. Then load
+my-startbot.lisp into the REPL.
 
 ** Git history
 The development of this plugin has undergone a couple of iterations in
@@ -20,15 +21,15 @@ relevant repositories to github for reference. They are as follows:
 
 - [[https://github.com/skalawag/hand-evaluator][hand evaluator]]
 
-  This is a rewrite of the hand-evaluator in cl-poker,
-  substantially the same as the code in the plugin.
+  This is a rewrite of the hand-evaluator in cl-poker, substantially
+  the same as (probably identical to) the code in the plugin.
 
 - [[https://github.com/skalawag/cl-poker-2][cl-poker-2]]
 
   This is a rewrite of the poker code in cl-poker, which uses the newer
   hand-evaluator.
 
-- Finally in this repository, I pulled together the best parts of
-  those projects, added the plugin code, and refined the poker code.
+- Finally, in this repository, I pulled together the best parts of
+  those projects, added the plugin code, and debugged the poker code.
 
 - =Sigh= Sorry for the mess.
