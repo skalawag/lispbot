@@ -177,7 +177,8 @@
     (append res (list "[d]"))))
 
 (defun display-game-state ()
-  (let ((seats (seating-format-values)))
+  (let ((seats (seating-format-values))
+        (field-string "~5a ~10a ~4a ~10a ~6a ~3a~%"))
     (reply (format nil "Stage: ~a   Pot: ~a  Hand: ~a"
                    *stage*
                    (compute-pot *prev-bets* *bets*)
@@ -185,12 +186,12 @@
     (sleep .5)
     (reply (format nil "Community Cards: ~a" (community-cards)))
     (sleep .5)
-    (reply (format nil "~5a ~10a ~4a ~7a ~4a ~3a~%"
+    (reply (format nil field-string
                    "Seat" "Name" "Nxt" "Chips" "Bet" "Fld"))
     (sleep .5)
     (dolist (p *players*)
       (sleep .5)
-      (reply (format nil "~5a ~10a ~4a ~7a ~4a ~3a~%"
+      (reply (format nil field-string
               (pop seats)
               (pname p)
               (if (acting p) "*" "")
@@ -269,11 +270,11 @@ show."
 
 (defparameter *option-exercised* nil)
 
-(defparameter *starting-chips* 1000)
+(defparameter *starting-chips* 1000.0)
 
-(defparameter *small-blind* 5)
+(defparameter *small-blind* 5.0)
 
-(defparameter *big-blind* 10)
+(defparameter *big-blind* 10.0)
 
 (defun post-game-cleanup ()
   (setf *game-started* nil
