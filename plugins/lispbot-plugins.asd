@@ -7,11 +7,19 @@
   :description "Some common plugins for the lispbot"
   :components ((:file "buzz-off-plugin"
                       :depends-on ("package"))
-               (:file "holdem-plugin"
-                      :depends-on ("package"))
+               ;; (:file "holdem-plugin"
+               ;;        :depends-on ("package"))
                (:file "roulette-plugin"
                       :depends-on ("package"))
+               (:file "bb-plugin"
+                      :depends-on ("package"))
                (:file "sheep-plugin"
+                      :depends-on ("package"))
+               (:file "sleep-plugin"
+                      :depends-on ("package"))
+               (:file "texas-holdem-plugin"
+                      :depends-on ("package"))
+               (:file "fortune-plugin"
                       :depends-on ("package"))
                (:file "dice-plugin"
 		      :depends-on ("package"))

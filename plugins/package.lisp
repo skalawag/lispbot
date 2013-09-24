@@ -10,10 +10,14 @@
            :info-plugin
            :box-plugin
            :cake-plugin
+           :sleep-plugin
            :sheep-plugin
            :roulette-plugin
            :holdem-plugin
            :buzz-off-plugin
+           :texas-holdem-plugin
+           :fortune-plugin
+           :bb-plugin
 
            ;; dice plugin
            :dice-plugin

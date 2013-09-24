@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 See the author's README below. It appears to be out of date,
 particularly with regard to the instructions for starting the
 bot. Evaluating following at the repl works for me:
@@ -48,3 +49,40 @@ To let the bot connect to a server and start, type:
 You can stop the bot by interrupting the read-loop (typically `C-c').
 It will automatically disconnect from the server.
 #+END_QUOTE
+=======
+* README for contest submission
+** Running the game
+Clone this branch of the Lispbot repository and edit my-startbot.lisp
+as needed. Create the irc-channel you chose. Then load
+my-startbot.lisp into the REPL.
+
+** Git history
+The development of this plugin has undergone a couple of iterations in
+more than two repositories. This is partly because I made a couple of
+restarts from scratch, and partly because I don't know how to use git
+very well, yet.
+
+If the judges or contest administrators want to see more of the
+history of the parts of this plugin (for instance, to verify that the
+development occurred within the contest time-frame), I've pushed the
+relevant repositories to github for reference. They are as follows:
+
+- [[https://github.com/skalawag/cl-poker][cl-poker]]
+
+  This was the origin of all this code, begun on June 25th.
+
+- [[https://github.com/skalawag/hand-evaluator][hand evaluator]]
+
+  This is a rewrite of the hand-evaluator in cl-poker, substantially
+  the same as (probably identical to) the code in the plugin.
+
+- [[https://github.com/skalawag/cl-poker-2][cl-poker-2]]
+
+  This is a rewrite of the poker code in cl-poker, which uses the newer
+  hand-evaluator.
+
+- Finally, in this repository, I pulled together the best parts of
+  those projects, added the plugin code, and debugged the poker code.
+
+- =Sigh= Sorry for the mess.
+>>>>>>> poker-submission-monolithic-sans-tests
