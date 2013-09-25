@@ -5,7 +5,7 @@
 
 (setq wispy
       (make-instance 'bot :nick "euclid"
-                     :channels (list "#amarillolinux" "#test--wispy")
+                     :channels (list "#test-holdem-poker-wispy")
                      :plugins (list 'bot.plugins:texas-holdem-plugin)))
 
 (bot:start wispy "irc.freenode.net")
