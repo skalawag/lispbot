@@ -32,6 +32,7 @@ relevant repositories to github for reference. They are as follows:
   hand-evaluator.
 
 - Finally, in this repository, I pulled together the best parts of
-  those projects, added the plugin code, and debugged the poker code.
+  those projects, added the plugin code, and debugged the poker
+  code. All this is in texas-holdem-poker.lisp.
 
 - =Sigh= Sorry for the mess.
