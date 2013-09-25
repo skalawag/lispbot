@@ -1,4 +1,6 @@
 * README for contest submission
+My texas-holdem-plugin.lisp can be found in lisbot/plugins.
+
 ** Running the game
 Clone this branch of the Lispbot repository and edit my-startbot.lisp
 as needed. Create the irc-channel you chose. Then load
