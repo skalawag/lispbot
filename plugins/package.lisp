@@ -19,6 +19,7 @@
            :fortune-plugin
            :bb-plugin
 
+
            ;; dice plugin
            :dice-plugin
            :dice-max-rolls
