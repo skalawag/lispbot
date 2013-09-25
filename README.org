@@ -1,55 +1,3 @@
-<<<<<<< HEAD
-See the author's README below. It appears to be out of date,
-particularly with regard to the instructions for starting the
-bot. Evaluating following at the repl works for me:
-
-#+BEGIN_SRC lisp
-    (setq bot (make-instance 'bot :nick "lispbot" :channels "#some-irc-channel" :plugins (list 'bot.plugins:sheep-plugin 'bot.plugins:roulette-plugin)))
-    (bot:start bot "irc.freenode.net")
-#+END_SRC
-
-
-
-#+BEGIN_QUOTE
-README
-******
-
-1 Basic Usage
-*************
-
-Here is a brief description of a few quick steps to get the Lispbot up
-and running.
-
-Firstly you have to install and/or load the bot. See INSTALL, for
-details.
-
-Then you have to create a bot instance. This is done by:
-
-     (make-bot "nick" "#mychannel" :plugins '(plugin1 plugin2...))
-
-The second argument can also be a list of channels. The bot will join
-them all.
-
-The plugins can either be the classname of a plugin (e.g.
-'bot-plugins:help-plugin), an instance of a plugin or a list of any of
-those.
-
-For example:
-
-     (bot:make-bot "lispbot" '("#chan1" "#chan2")
-                   :plugins (list 'bot.plugins:help-plugin
-                                  'bot.plugins:dice-plugin
-                                  (make-instance 'bot.plugins:greet-plugin
-                                                 :greet-new-users t))
-
-To let the bot connect to a server and start, type:
-
-     (bot:start bot "example.com")
-
-You can stop the bot by interrupting the read-loop (typically `C-c').
-It will automatically disconnect from the server.
-#+END_QUOTE
-=======
 * README for contest submission
 ** Running the game
 Clone this branch of the Lispbot repository and edit my-startbot.lisp
@@ -85,4 +33,3 @@ relevant repositories to github for reference. They are as follows:
   those projects, added the plugin code, and debugged the poker code.
 
 - =Sigh= Sorry for the mess.
->>>>>>> poker-submission-monolithic-sans-tests
