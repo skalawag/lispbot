@@ -149,6 +149,7 @@ raise-or-fold, etc."
         *prev-bets* nil
         *hand-number* 0
         *community-cards* nil
+        *acts* nil
         *stage* "Pre-Flop"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
