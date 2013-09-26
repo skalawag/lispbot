@@ -276,8 +276,6 @@ show."
   no action, 1 for any act. Once everyone has acted, the betting round
   is over.")
 
-(defparameter *option-exercised* nil)
-
 (defparameter *starting-chips* 1000.0)
 
 (defparameter *small-blind* 5.0)
@@ -288,7 +286,6 @@ show."
   (setf *game-started* nil
         *game-over* nil
         *players* nil
-        *option-exercised* nil
         *hand-number* 0
         *bets* nil
         *acts* nil
@@ -413,9 +410,7 @@ show."
      (setf (folded player) t)
      (set-act player))
     ((eq action 'check)
-     (set-act player)
-     (when (and (string= *stage* "Pre-Flop") (equal player (second *players*)))
-       (setf *option-exercised* t)))
+     (set-act player))
     ((eq action 'call)
      (call player))
     ((eq action 'bet)
@@ -432,10 +427,6 @@ show."
        ((< (+ amt (car *bets*)) (* 2 (car *bets*)))
 	nil) ; illegal raise
        (t
-        (when (and
-               (string= *stage* "Pre-Flop")
-               (null *option-exercised*))
-          (setf *option-exercised* t))
 	(raise player amt))))
     ((eq action 'allin)
      (allin player))))
@@ -489,8 +480,7 @@ show."
   (handle-player-action (car players) 'bet *small-blind*)
   (handle-player-action (cadr players) 'raise *small-blind*)
   ;; zero acts
-  (set-acts)
-  (setf *option-exercised* nil))
+  (set-acts))
 
 (defun get-acting (players)
   (let ((acting (remove-if-not #'(lambda (p) (acting p)) players)))
