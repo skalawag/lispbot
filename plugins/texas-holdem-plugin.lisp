@@ -343,14 +343,14 @@ show."
                    (cons player (+ (chips player)
                                    (get-bet-for-display player *bets*))) *bets*))
      (setf (car *bets*) (get-bet-for-display player *bets*))
-     (debit-chips player (car *bets*)))
+     (debit-chips player (chips player)))
     ((and *bets* (null (player-in-bets? *bets* player)))
      (setf *bets* (update-player-in-bets (cons player (chips player)) *bets*))
      (setf (car *bets*) (get-bet-for-display player *bets*))
-     (debit-chips player (car *bets*)))
+     (debit-chips player (chips player)))
     (t
      (setf *bets* (list (chips player) (cons player (chips player))))
-     (debit-chips player (car *bets*)))))
+     (debit-chips player (chips player)))))
 
 (defun call (player)
   (let ((p (player-in-bets? *bets* player))
