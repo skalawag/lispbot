@@ -313,6 +313,8 @@ show."
   (make-instance 'player :name name :chips *starting-chips*))
 
 (defun bet (player amt)
+  (set-acts)
+  (set-act player)
   (cond
     ((> amt (chips player))
      (let ((amt (chips player)))
@@ -326,6 +328,8 @@ show."
   (setf (chips player) (- (chips player) amt)))
 
 (defun raise (player amt)
+  (set-acts)
+  (set-act player)
   (if (< (chips player) (+ (car *bets*) amt))
       (progn
         (setf *bets*
@@ -343,6 +347,9 @@ show."
         (setf (car *bets*) (+ (car *bets*) amt)))))
 
 (defun allin (player)
+  ;; FIXME: for some allin moves we should not set acts
+  (set-acts)
+  (set-act player)
   (cond
     ((and *bets* (player-in-bets? *bets* player))
      (setf *bets* (update-player-in-bets
@@ -358,9 +365,13 @@ show."
      (setf *bets* (list (chips player) (cons player (chips player))))
      (debit-chips player (chips player)))))
 
+(defun set-act (player)
+  (setf (elt *acts* (position player *players* :test #'equal)) 1))
+
 (defun call (player)
   (let ((p (player-in-bets? *bets* player))
         (bet-to-call (car *bets*)))
+    (set-act player)
     (cond
       (p
        (if (< (chips player) (- bet-to-call (cdr p)))
@@ -403,12 +414,14 @@ show."
 (defun handle-player-action (player action &optional amt)
   (cond
     ((eq action 'fold)
-     (setf (folded player) t))
+     (setf (folded player) t)
+     (set-act player))
     ((eq action 'check)
+     (set-act player)
      ;; we only need this for Flop and later anyway
-     (when (and (string/= *stage* "Pre-Flop") *first-check*)
-       (set-player-flag player)
-       (setf *first-check* nil))
+     ;; (when (and (string/= *stage* "Pre-Flop") *first-check*)
+     ;;   (set-player-flag player)
+     ;;   (setf *first-check* nil))
      (when (and (string= *stage* "Pre-Flop") (equal player (second *players*)))
        (setf *option-exercised* t)))
     ((eq action 'call)
@@ -446,23 +459,7 @@ the betting-round is over."
   (setf (flag player) t))
 
 (defun betting-round-over? ()
-  (cond
-    ((< (length (get-unfolded *players*)) 2) t)
-    ((and (string= *stage* "Pre-Flop")
-          (and *bets* (> (car *bets*) 10))
-          (pot-is-good?))
-     t)
-    ((and (string= *stage* "Pre-Flop")
-          (= (get-bet-for-display (car *players*) *bets*) *small-blind*))
-     nil)
-    ((and (string= *stage* "Pre-Flop")
-          (equal (get-acting *players*) (second *players*))
-          (null *option-exercised*)) nil)
-    ((and (null *first-check*) (null (flag (get-acting *players*)))) nil)
-    ((and (null *bets*) *first-check*) nil)
-    ((pot-is-good?) t)
-    ((null (flag (get-acting *players*))) nil)
-    (t "FAIL")))
+  (every #'(lambda (x) (= x 1)) *acts*))
 
 (defun pot-is-good? ()
   (let ((res t))
@@ -510,6 +507,8 @@ the betting-round is over."
   "Always call this after rotating."
   (handle-player-action (car players) 'bet *small-blind*)
   (handle-player-action (cadr players) 'raise *small-blind*)
+  ;; zero acts
+  (set-acts)
   (setf *option-exercised* nil))
 
 (defun get-acting (players)
@@ -561,7 +560,8 @@ the betting-round is over."
             (setf (acting (third *players*)) t)
             (setf (acting (car *players*)) t))
         (setf *stage* "Pre-Flop")
-        (setf *first-check* t)
+        (set-acts)
+        ;(setf *first-check* t)
         (setf *hand-number* (1+ *hand-number*))
         (setf *bets* nil)
         (setf *prev-bets* nil)
@@ -667,11 +667,22 @@ get-bet does. NOTE: I think I can dispense with this now."
     (setf (chips p) (+ (chips p) (payout p)))
     (setf (payout p) 0)))
 
+(defun set-acts ()
+  (cond
+    ((string= *stage* "Pre-flop")
+     (setf *acts* (make-sequence 'list (length *players*) :initial-element 0)))
+    (t
+     (setf *acts* (make-sequence 'list (length *players*) :initial-element 0))
+     (dolist (p *players*)
+       (when (folded p)
+         (setf (elt *acts* (position p *players* :test #'equal)) 1))))))
+
 (defun clean-up-and-advance-stage ()
   (setf *prev-bets* (cons *bets* *prev-bets*))
   (setf *bets* nil)
   (advance-stage)
-  (setf *first-check* t)
+  (set-acts) ; this will make *first-check* unnecessary if it works
+  ;(setf *first-check* t)
   (mapcar #'(lambda (p) (setf (flag p) nil)) *players*)
   (when (string/= *stage* "Pre-Flop")
     (mapcar #'(lambda (x) (setf (acting x) nil)) *players*)
