@@ -83,24 +83,27 @@ raise-or-fold, etc."
   (when (string= (pname (get-acting *players*)) (nick (sender *last-message*)))
     (handle-player-action (get-player (nick (sender *last-message*))) 'fold)
     (advance-game)
-    (when (not *game-over*)
-      (display-game-state))))
+    (if (not *game-over*)
+        (display-game-state)
+        (post-game-cleanup))))
 
 (defcommand call ((plugin texas-holdem-plugin))
   (declare (ignore plugin))
   (when (string= (pname (get-acting *players*)) (nick (sender *last-message*)))
     (handle-player-action (get-player (nick (sender *last-message*))) 'call)
     (advance-game)
-    (when (not *game-over*)
-      (display-game-state))))
+    (if (not *game-over*)
+        (display-game-state)
+        (post-game-cleanup))))
 
 (defcommand check ((plugin texas-holdem-plugin))
   (declare (ignore plugin))
   (when (string= (pname (get-acting *players*)) (nick (sender *last-message*)))
     (handle-player-action (get-player (nick (sender *last-message*))) 'check)
     (advance-game)
-    (when (not *game-over*)
-      (display-game-state))))
+    (if (not *game-over*)
+        (display-game-state)
+        (post-game-cleanup))))
 
 (defcommand bet ((plugin texas-holdem-plugin) amt)
   (declare (ignore plugin))
@@ -110,8 +113,9 @@ raise-or-fold, etc."
     (handle-player-action
      (get-player (nick (sender *last-message*))) 'bet (read-from-string amt))
     (advance-game)
-    (when (not *game-over*)
-      (display-game-state))))
+    (if (not *game-over*)
+        (display-game-state)
+        (post-game-cleanup))))
 
 (defcommand raise ((plugin texas-holdem-plugin) amt)
   (declare (ignore plugin))
@@ -122,8 +126,9 @@ raise-or-fold, etc."
       (handle-player-action
        (get-player nick) 'raise (read-from-string amt))
       (advance-game)
-      (when (not *game-over*)
-        (display-game-state)))))
+    (if (not *game-over*)
+        (display-game-state)
+        (post-game-cleanup)))))
 
 (defcommand allin ((plugin texas-holdem-plugin))
   (declare (ignore plugin))
@@ -131,8 +136,9 @@ raise-or-fold, etc."
     (when (string= (pname (get-acting *players*)) nick)
       (handle-player-action (get-player nick) 'allin)
       (advance-game)
-      (when (not *game-over*)
-        (display-game-state)))))
+    (if (not *game-over*)
+        (display-game-state)
+        (post-game-cleanup)))))
 
 (defcommand new ((plugin texas-holdem-plugin))
   (declare (ignore plugin))
@@ -545,8 +551,7 @@ the betting-round is over."
       (progn
         (reply (format nil "The game is over. ~a has won!"
                        (pname (car *players*))))
-        (setf *game-over* t)
-        (post-game-cleanup))
+        (setf *game-over* t))
       (progn
         (mapcar #'(lambda (x)
                     (setf (acting x) nil)
