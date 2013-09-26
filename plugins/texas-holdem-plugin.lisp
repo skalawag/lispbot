@@ -361,9 +361,6 @@ show."
      (setf *bets* (list (chips player) (cons player (chips player))))
      (debit-chips player (chips player)))))
 
-(defun set-act (player)
-  (setf (elt *acts* (position player *players* :test #'equal)) 1))
-
 (defun call (player)
   (let ((p (player-in-bets? *bets* player))
         (bet-to-call (car *bets*)))
@@ -646,6 +643,9 @@ get-bet does. NOTE: I think I can dispense with this now."
   (dolist (p players)
     (setf (chips p) (+ (chips p) (payout p)))
     (setf (payout p) 0)))
+
+(defun set-act (player)
+  (setf (elt *acts* (position player *players* :test #'equal)) 1))
 
 (defun set-acts ()
   (cond
