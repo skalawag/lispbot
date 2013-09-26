@@ -271,12 +271,14 @@ show."
 
 (defparameter *stage* "Pre-Flop")
 
-(defparameter *first-check* t
-  "I hate this, but without it I cannot determine that a betting round
-  in which all players have checked has ended. To do so, we have to
-  set the flag of the first (but only the first) player that has
-  checked. So, once the first player in the round has checked, this is
-  set to nil.")
+;; (defparameter *first-check* t
+;;   "I hate this, but without it I cannot determine that a betting round
+;;   in which all players have checked has ended. To do so, we have to
+;;   set the flag of the first (but only the first) player that has
+;;   checked. So, once the first player in the round has checked, this is
+;;   set to nil.")
+
+(defparameter *acts* nil)
 
 (defparameter *option-exercised* nil)
 
@@ -291,9 +293,10 @@ show."
         *game-over* nil
         *players* nil
         *option-exercised* nil
-        *first-check* t
+        ;*first-check* t
         *hand-number* 0
         *bets* nil
+        *acts* nil
         *prev-bets* nil))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
