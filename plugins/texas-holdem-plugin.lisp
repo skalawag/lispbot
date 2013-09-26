@@ -271,13 +271,6 @@ show."
 
 (defparameter *stage* "Pre-Flop")
 
-;; (defparameter *first-check* t
-;;   "I hate this, but without it I cannot determine that a betting round
-;;   in which all players have checked has ended. To do so, we have to
-;;   set the flag of the first (but only the first) player that has
-;;   checked. So, once the first player in the round has checked, this is
-;;   set to nil.")
-
 (defparameter *acts* nil)
 
 (defparameter *option-exercised* nil)
@@ -293,7 +286,6 @@ show."
         *game-over* nil
         *players* nil
         *option-exercised* nil
-        ;*first-check* t
         *hand-number* 0
         *bets* nil
         *acts* nil
@@ -422,10 +414,6 @@ show."
      (set-act player))
     ((eq action 'check)
      (set-act player)
-     ;; we only need this for Flop and later anyway
-     ;; (when (and (string/= *stage* "Pre-Flop") *first-check*)
-     ;;   (set-player-flag player)
-     ;;   (setf *first-check* nil))
      (when (and (string= *stage* "Pre-Flop") (equal player (second *players*)))
        (setf *option-exercised* t)))
     ((eq action 'call)
@@ -554,7 +542,6 @@ show."
             (setf (acting (car *players*)) t))
         (setf *stage* "Pre-Flop")
         (set-acts)
-        ;(setf *first-check* t)
         (setf *hand-number* (1+ *hand-number*))
         (setf *bets* nil)
         (setf *prev-bets* nil)
@@ -674,8 +661,7 @@ get-bet does. NOTE: I think I can dispense with this now."
   (setf *prev-bets* (cons *bets* *prev-bets*))
   (setf *bets* nil)
   (advance-stage)
-  (set-acts) ; this will make *first-check* unnecessary if it works
-  ;(setf *first-check* t)
+  (set-acts)
   (when (string/= *stage* "Pre-Flop")
     (mapcar #'(lambda (x) (setf (acting x) nil)) *players*)
     (dolist (p *players*)
