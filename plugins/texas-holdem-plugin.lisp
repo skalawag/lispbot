@@ -310,8 +310,8 @@ show."
    (best-hand :initform nil :accessor hand)
    (acting-player :initform nil :accessor acting)
    (folded-player :initform nil :accessor folded)
-   (player-payout :initform 0 :accessor payout)
-   (first-bettor-or-last-raiser-flag :initform nil :accessor flag)))
+   (player-payout :initform 0 :accessor payout)))
+
 
 (defun make-player (name)
   (make-instance 'player :name name :chips *starting-chips*))
@@ -436,8 +436,7 @@ show."
          (progn
 	   (when (or (and (string= *stage* "Pre-Flop") (= amt 5))
                      (>= amt 10))
-             (bet player amt)
-             (set-player-flag player)))))
+             (bet player amt)))))
     ((eq action 'raise)
      (cond
        ((null *bets*)
@@ -449,18 +448,9 @@ show."
                (string= *stage* "Pre-Flop")
                (null *option-exercised*))
           (setf *option-exercised* t))
-	(set-player-flag player)
 	(raise player amt))))
     ((eq action 'allin)
-     (set-player-flag player)
      (allin player))))
-
-(defun set-player-flag (player)
-  "When a player bets or raises, set this flag. When we see it again,
-the betting-round is over."
-  (dolist (p *players*)
-    (setf (flag p) nil))
-  (setf (flag player) t))
 
 (defun betting-round-over? ()
   (every #'(lambda (x) (= x 1)) *acts*))
@@ -686,7 +676,6 @@ get-bet does. NOTE: I think I can dispense with this now."
   (advance-stage)
   (set-acts) ; this will make *first-check* unnecessary if it works
   ;(setf *first-check* t)
-  (mapcar #'(lambda (p) (setf (flag p) nil)) *players*)
   (when (string/= *stage* "Pre-Flop")
     (mapcar #'(lambda (x) (setf (acting x) nil)) *players*)
     (dolist (p *players*)
