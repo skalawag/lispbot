@@ -271,7 +271,10 @@ show."
 
 (defparameter *stage* "Pre-Flop")
 
-(defparameter *acts* nil)
+(defparameter *acts* nil
+  "Record actions so we know when a round of betting has ended: 0 for
+  no action, 1 for any act. Once everyone has acted, the betting round
+  is over.")
 
 (defparameter *option-exercised* nil)
 
