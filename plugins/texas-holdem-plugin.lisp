@@ -307,8 +307,8 @@ show."
    (best-hand :initform nil :accessor hand)
    (acting-player :initform nil :accessor acting)
    (folded-player :initform nil :accessor folded)
+   (allin-player :initform nil :accessor player-allin)
    (player-payout :initform 0 :accessor payout)))
-
 
 (defun make-player (name)
   (make-instance 'player :name name :chips *starting-chips*))
