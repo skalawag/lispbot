@@ -433,8 +433,11 @@ show."
        ((< (+ amt (car *bets*)) (* 2 (car *bets*)))
 	nil) ; illegal raise
        (t
+        (set-act player)
 	(raise player amt))))
     ((eq action 'allin)
+     (setf (player-allin player) t)
+     (set-act player)
      (allin player))))
 
 (defun betting-round-over? ()
