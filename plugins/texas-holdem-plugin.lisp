@@ -417,6 +417,7 @@ show."
     ((eq action 'check)
      (set-act player))
     ((eq action 'call)
+     (set-act player)
      (call player))
     ((eq action 'bet)
      (if *bets*
