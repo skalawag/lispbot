@@ -55,6 +55,8 @@ raise-or-fold, etc."
     (cond
       ((is-player-p player)
        (reply "You are already in the game!" t))
+      (*game-started*
+       (reply "The game is already started! You're too late this time." t))
       (t
        (push (make-player player) *players*)
        (reply (format nil "~a has joined Texas Holdem!" player))
