@@ -656,7 +656,7 @@ get-bet does. NOTE: I think I can dispense with this now."
     (t
      (setf *acts* (make-sequence 'list (length *players*) :initial-element 0))
      (dolist (p *players*)
-       (when (folded p)
+       (when (or (folded p) (player-allin p))
          (setf (elt *acts* (position p *players* :test #'equal)) 1))))))
 
 (defun clean-up-and-advance-stage ()
