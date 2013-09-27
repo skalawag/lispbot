@@ -7,23 +7,24 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; Plugin Commands
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun s-reply (msg &optional address)
+  "Lispbot will flood the message queue if too many messages are sent
+in a row, so use s-reply (slow-reply) in those instances."
+  (if address
+      (reply msg address)
+      (reply msg))
+  (sleep .5))
 
 (defcommand holdem-help ((plugin texas-holdem-plugin))
   "FIXME: This is not the lispbot way to supply help."
   (declare (ignore plugin))
-  (reply "Available commands for Texas Holdem:")
-  (sleep .5)
-  (reply "holdem: initiate a game of holdem")
-  (sleep .5)
-  (reply "join-holdem: join a game of holdem")
-  (sleep .5)
-  (reply "start-holdem: start the game once all the players have joined.")
-  (sleep .5)
-  (reply "rd: redraw the game state if it gets stuck.")
-  (sleep .5)
-  (reply "new: manually reset the game to a fresh state.")
-  (sleep .5)
-  (reply "fold | check | call | bet AMT | raise AMT | allin: poker actions"))
+  (s-reply "Available commands for Texas Holdem:")
+  (s-reply "holdem: initiate a game of holdem")
+  (s-reply "join-holdem: join a game of holdem")
+  (s-reply "start-holdem: start the game once all the players have joined.")
+  (s-reply "rd: redraw the game state if it gets stuck.")
+  (s-reply "new: manually reset the game to a fresh state.")
+  (s-reply "fold | check | call | bet AMT | raise AMT | allin: poker actions"))
 
 (defcommand holdem ((plugin texas-holdem-plugin) &optional variation)
   "TODO: add variations on the game, such as binary poker,
@@ -191,19 +192,15 @@ raise-or-fold, etc."
 
 (defun display-game-state ()
   (let ((seats (seating-format-values)))
-    (reply (format nil "Stage: ~a   Pot: ~a  Hand: ~a"
+    (s-reply (format nil "Stage: ~a   Pot: ~a  Hand: ~a"
                    *stage*
                    (compute-pot *prev-bets* *bets*)
                    *hand-number*))
-    (sleep .5)
-    (reply (format nil "Community Cards: ~a" (community-cards)))
-    (sleep .5)
-    (reply (format nil "~5a ~10a ~4a ~10<~a~> ~7<~a~> ~4<~a~>~%"
+    (s-reply (format nil "Community Cards: ~a" (community-cards)))
+    (s-reply (format nil "~5a ~10a ~4a ~10<~a~> ~7<~a~> ~4<~a~>~%"
                    "Seat" "Name" "Next" "Chips" "Bet" "Fld"))
-    (sleep .5)
     (dolist (p *players*)
-      (sleep .5)
-      (reply (format nil "~5a ~10a ~4a ~10,1F ~7,1F ~4<~a~>~%"
+      (s-reply (format nil "~5a ~10a ~4a ~10,1F ~7,1F ~4<~a~>~%"
               (pop seats)
               (if (> (length (pname p)) 10) (subseq (pname p) 0 9) (pname p))
               (if (acting p) "*" "")
@@ -219,22 +216,18 @@ raise-or-fold, etc."
 show."
   (reply (format nil "The winners of hand ~a are:" *hand-number*))
   (dolist (w winners)
-    (sleep .5)
-    (reply (format nil "~a: ~a (~a) Holding: ~a"
+    (s-reply (format nil "~a: ~a (~a) Holding: ~a"
                    (pname w)
                    (car (last (hand w)))
                    (second (hand w))
                    (pockets w))))
-  (sleep .5)
-  (reply "The remaining hands are:")
+  (s-reply "The remaining hands are:")
   (dolist (c (set-difference (get-unfolded *players*) winners :test #'equal))
-    (sleep .5)
-    (reply (format nil "~a: ~a (~a) Holding: ~a"
+    (s-reply (format nil "~a: ~a (~a) Holding: ~a"
                    (pname c)
                    (car (last (hand c)))
                    (second (hand c))
                    (pockets c))))
-  (sleep .5)
   (reply "------------------------------------------"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
