@@ -216,21 +216,31 @@ raise-or-fold, etc."
 (defun display-winners (winners)
   "FIXME: if the caller isn't the winner, he should not be forced to
 show."
-  (reply (format nil "The winners of hand ~a are:" *hand-number*))
-  (dolist (w winners)
-    (s-reply (format nil "~a: ~a (~a) Holding: ~a"
-                   (pname w)
-                   (car (last (hand w)))
-                   (second (hand w))
-                   (pockets w))))
-  (s-reply "The remaining hands are:")
-  (dolist (c (set-difference (get-unfolded *players*) winners :test #'equal))
-    (s-reply (format nil "~a: ~a (~a) Holding: ~a"
-                   (pname c)
-                   (car (last (hand c)))
-                   (second (hand c))
-                   (pockets c))))
-  (reply "------------------------------------------"))
+  (cond
+    ((< (length (get-unfolded *players*)) 2)
+     (reply
+      (format nil "The winner of hand ~a is ~a"
+              *hand-number* (pname (car winners)))))
+    (t
+     (reply (format nil "The winners of hand ~a are:" *hand-number*))
+     (dolist (w winners)
+       (s-reply (format nil "~a: ~a (~a) Holding: ~a"
+                        (pname w)
+                        (car (last (hand w)))
+                        (second (hand w))
+                        (pockets w))))))
+  (cond
+    ((< (length (get-unfolded *players*)) 2)
+     (reply "------------------------------------------"))
+    (t
+     (s-reply "The remaining hands are:")
+     (dolist (c (set-difference (get-unfolded *players*) winners :test #'equal))
+       (s-reply (format nil "~a: ~a (~a) Holding: ~a"
+                        (pname c)
+                        (car (last (hand c)))
+                        (second (hand c))
+                        (pockets c))))
+     (reply "------------------------------------------"))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; Global variables
