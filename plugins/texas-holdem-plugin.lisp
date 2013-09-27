@@ -680,8 +680,9 @@ get-bet does. NOTE: I think I can dispense with this now."
     (cond
       ((hand-over?)
        (eval-hands *players*)
-       (let ((winners (get-winners *players*)))
-	 (calculate-player-payouts winners *players* *bets* *prev-bets*)
+       (let ((winners (get-winners (get-unfolded *players*))))
+	 (calculate-player-payouts winners
+                                   (get-unfolded *players*) *bets* *prev-bets*)
 	 (credit-payouts *players*)
 	 (display-winners winners)
 	 (reset-hand)))
